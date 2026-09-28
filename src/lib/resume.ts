@@ -1,7 +1,7 @@
 "use client";
 
 import type { Me } from "@/lib/api/member";
-import { applyMeToSession } from "@/lib/session";
+import { applyMeToSession, normalizeCeremonyStep } from "@/lib/session";
 import { ceremonyUrlForStep, persistCeremonyStep } from "@/lib/ceremony";
 import { computeResume, hydrateAnswersFromServer, resumeUrl } from "@/lib/story-answers";
 import { isFilled, type StoryAnswers } from "@/lib/story-data";
@@ -60,7 +60,7 @@ export async function resumeMember(me: Me) {
   }
 
   if (target.kind === "ceremony") {
-    window.location.replace(ceremonyUrlForStep(step));
+    window.location.replace(ceremonyUrlForStep(normalizeCeremonyStep(step)));
     return;
   }
   window.location.replace(resumeUrl(target));

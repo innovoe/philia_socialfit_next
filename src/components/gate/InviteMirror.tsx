@@ -46,7 +46,8 @@ export function InviteMirror() {
     }
     setFrom(inviteOwnerName());
     setQuestion(formatMirrorQuestion(s.mirrorQuestion));
-    setHost(document.querySelector(".phone-screen"));
+    const stage = document.querySelector(".phone-screen");
+    setHost(stage instanceof HTMLElement ? stage : null);
     setReady(true);
   }, []);
 
