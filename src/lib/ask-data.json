@@ -1,0 +1,252 @@
+{
+  "KB": {
+    "what is this": "SocialFit is a new way to find your people in a city.<br><br>It works like a living signal network. First, you build your private SocialFit Story and receive your Read. This creates your Philia ID: your private social passport inside the network.<br><br>Once your ID is active, you can choose to send a Signal: a private expression of what you need, want, or are open to in that moment.<br><br>Those Signals move through the trust graph to find resonance: people, neighbourhood Pods, Rooms, and real-world moments that fit where you are now.<br><br>The app is the signal layer. The real world is the point.<br><br>No swiping. No public feed. No performing for attention. Just a more natural way for the right people and moments to find one another.",
+    "what is socialfit": "SocialFit is a new way to find your people in a city.<br><br>It works like a living signal network. First, you build your private SocialFit Story and receive your Read. This creates your Philia ID: your private social passport inside the network.<br><br>Once your ID is active, you can choose to send a Signal: a private expression of what you need, want, or are open to in that moment.<br><br>Those Signals move through the trust graph to find resonance: people, neighbourhood Pods, Rooms, and real-world moments that fit where you are now.<br><br>The app is the signal layer. The real world is the point.<br><br>No swiping. No public feed. No performing for attention. Just a more natural way for the right people and moments to find one another.",
+    "how is this different": "Most social platforms are built around performance: profiles, followers, and feeds.<br><br>SocialFit is built around fit. You do not browse people. You share a private Signal and SocialFit finds what matches. No public presence. No scrolling. Just people and moments that fit where you are right now.",
+    "is this dating": "It can be, but that is not the whole point of SocialFit.<br><br>A Signal can be for anything from friendship and dating energy to creative chemistry, founder conversations, dinner plans, support, or people who understand your current chapter.<br><br>SocialFit is built for a fuller social life, not only romantic matching. A more dedicated dating filter is coming later.",
+    "why invite only": "To protect the trust of the early network.<br><br>SocialFit grows person to person, through Keys. Every member is connected to someone who vouched for them. That accountability chain is what makes it safe to be real here.",
+    "what next": "Here is how your SocialFit journey works.<br><br>1. Claim your Key to verify your access.<br>2. Try your first Signal, a short private expression of what you are looking for socially.<br>3. Build your Story, your self-read and social context.<br>4. Send 3 Philia Keys to trusted people to activate your Social Mirror.<br>5. Your Philia ID becomes active as your social layer completes.<br><br>What step are you on?",
+    "what do i do next": "Here is how your SocialFit journey works.<br><br>1. Claim your Key to verify your access.<br>2. Try your first Signal, a short private expression of what you are looking for socially.<br>3. Build your Story, your self-read and social context.<br>4. Send 3 Philia Keys to trusted people to activate your Social Mirror.<br>5. Your Philia ID becomes active as your social layer completes.<br><br>What step are you on?",
+    "claim my key": "Open the Key link you received and verify your phone number. Once your OTP is confirmed, your access is saved and you can continue into your first Signal.",
+    "start signal": "Tap the Signal section in the flow. Write a short, honest expression of what kind of people or moment you are in the mood for right now. There is no right answer. Clear is better than polished.",
+    "build story": "Your Story is a self-read, a few questions that help SocialFit understand how you move socially. Answer honestly. Your responses are private to you and the system.",
+    "send keys": "Go to your Key Tracker and enter the names and contacts of three people you genuinely trust. They will receive a Philia Key from you and be asked one guided question about how they experience you socially.",
+    "what happens at launch": "At launch, SocialFit goes live in the city. Signals start surfacing real matches, Pods form, and Rooms begin. First Wave members get priority access to the full social field as it opens.",
+    "my key": "Your Philia Key is your private access object.<br><br>It is how SocialFit grows through trust instead of open public signup. A Key is not a referral code. It is a trust signal.<br><br>When someone gives you a Key, they are vouching for your presence in the network.",
+    "what is a key": "Your Philia Key is your private access object.<br><br>It is how SocialFit grows through trust instead of open public signup. A Key is not a referral code. It is a trust signal.<br><br>When someone gives you a Key, they are vouching for your presence in the network.",
+    "why did i get one": "Someone in the SocialFit network chose to vouch for you. They used one of their three Keys to invite you personally. That is not automatic. It means something.",
+    "why do keys expire": "Keys have a claim window to protect the integrity of the trust chain. An unclaimed Key sitting open indefinitely is a security risk.<br><br>If your Key expired, ask the person who sent it to resend. They can reissue it.",
+    "key expired": "Ask the person who sent your Key to resend it. They can reissue a new claim link from their Key Tracker.<br><br>If you do not know who sent it or cannot reach them, let us know and we will help.",
+    "can i send a key": "Yes. Once you have verified your access, you receive three Philia Keys to pass on to people you genuinely vouch for.",
+    "i sent it wrong": "If your Key went to the wrong person, let us know as soon as possible and we can deactivate the link before it is claimed.",
+    "invite link broken": "Try opening the link on a different browser or device. If it still does not work, we can reissue it.",
+    "my signal": "A Signal is a live expression of what you are in the mood for socially.<br><br>After your Story and SocialFit Read create your Philia ID, you can send Signals into the city. A Signal may be about the kind of people, conversation, room, plan, support, energy, or moment that would fit you now.<br><br>SocialFit then moves through the trust graph to find resonance. The Signal can be highly customised based on what and whom you want to meet, and is attuned to your own needs.",
+    "what is a signal": "A Signal is a live expression of what you are in the mood for socially.<br><br>After your Story and SocialFit Read create your Philia ID, you can send Signals into the city. A Signal may be about the kind of people, conversation, room, plan, support, energy, or moment that would fit you now.<br><br>SocialFit then moves through the trust graph to find resonance. The Signal can be highly customised based on what and whom you want to meet, and is attuned to your own needs.",
+    "show examples": "Some examples of Signals others have used:<br><br>\"I want easy weekend plans with people who do not take themselves too seriously.\"<br><br>\"Founder energy, late-stage building, honest conversations.\"<br><br>\"I just moved here and want to meet people who feel like home.\"<br><br>\"Creative people, something that does not feel like networking.\"<br><br>Write what is true for you right now.",
+    "can i edit it": "Yes. You can update your Signal at any time. A new Signal replaces the old one. Philia re-reads it fresh each time.",
+    "who sees it": "No one else sees your Signal directly.<br><br>It goes through Philia's matching system and is used to find people, Pods, and moments that fit. The words you write are private. Only the fit result surfaces.",
+    "who sees my signal": "No one else sees your Signal directly.<br><br>It goes through Philia's matching system and is used to find people, Pods, and moments that fit. The words you write are private. Only the fit result surfaces.",
+    "philia id": "Your Philia ID is your private SocialFit passport.<br><br>It holds your self-read, social pattern, and access status inside the network. It is not a public profile. It helps SocialFit understand how you move socially and what kinds of people, Pods, or Rooms may fit you.",
+    "what is philia id": "Your Philia ID is your private SocialFit passport.<br><br>It holds your self-read, social pattern, and access status inside the network. It is not a public profile. It helps SocialFit understand how you move socially and what kinds of people, Pods, or Rooms may fit you.",
+    "why is it locked": "Your Philia ID activates in stages.<br><br>Your self-read from the Story Builder completes the first layer. Your Social Mirror, which comes from the responses of your three Key nominees, completes the second layer. Once both are in, your Philia ID becomes active.",
+    "what is social mirror": "The Social Mirror adds one layer of outside perspective to your self-read.<br><br>Instead of relying only on how you describe yourself, SocialFit asks the people you nominated one guided question about how they experience you socially.<br><br>You see each nominee’s archetype on your Key Vault. The combined pattern still forms your Social Archetype on your Philia ID.",
+    "can others see it": "No. Your Philia ID is private to you and the Philia system.<br><br>It is not a public profile. It does not appear in search or to other members. It is how SocialFit understands your fit, not how others see you.",
+    "what is self archetype": "Your Self Archetype is the social identity pattern that emerges from your Story Builder responses. It reflects how you perceive your own social energy, rhythm, and needs.",
+    "what is social archetype": "Your Social Archetype is the pattern that emerges from your Social Mirror responses. It reflects how others experience you socially. Together with your Self Archetype, it forms the core of your Philia ID.",
+    "3 keys": "SocialFit grows through trust.<br><br>Your three Keys help build the early field around real relationships, not anonymous signups. They also help activate the Social Mirror layer of your Philia ID.<br><br>Choose people whose perspective, presence, and judgment you genuinely trust.",
+    "why 3 keys": "SocialFit grows through trust.<br><br>Your three Keys help build the early field around real relationships, not anonymous signups. They also help activate the Social Mirror layer of your Philia ID.<br><br>Choose people whose perspective, presence, and judgment you genuinely trust.",
+    "why send 3 keys": "SocialFit grows through trust.<br><br>Your three Keys help build the early field around real relationships, not anonymous signups. They also help activate the Social Mirror layer of your Philia ID.<br><br>Choose people whose perspective, presence, and judgment you genuinely trust.",
+    "who should i choose": "Choose people who know you socially, not just professionally. People who would describe you honestly rather than flatteringly. People whose own presence in the network you would vouch for.<br><br>Diversity of perspective helps. Do not send all three to people who know you the same way.",
+    "what do they see": "Your nominees receive a Philia Key and one guided question about how they experience you socially. They do not see your Signal, your Story, or your Philia ID. They only answer their one question and that is it.",
+    "what if they don't respond": "Send a gentle reminder from your Key Tracker. If a nominee cannot respond, you can withdraw the Key and reissue it to someone else before they have claimed it.",
+    "can i change them": "Yes, before they claim the Key. Once someone has claimed their Key and responded, that connection is part of your trust layer and cannot be undone.",
+    "can i change someone": "Yes, before they claim the Key. Once someone has claimed their Key and responded, that connection is part of your trust layer and cannot be undone.",
+    "remind someone": "Go to your Key Tracker and tap the resend option next to the nominee you want to nudge. They will receive a new notification.",
+    "privacy": "SocialFit is not a public feed.<br><br>Some information is private to you. Some is used by the system to understand fit. Some may appear only in specific SocialFit contexts where it is relevant.<br><br>The goal is to create better fit, not expose people unnecessarily.<br><br><a href=\"privacy/\" target=\"_blank\" rel=\"noopener noreferrer\">Read the full Privacy Policy →</a>",
+    "full privacy policy": "Our full Privacy Policy covers what we collect, how we use it, retention, your rights under UAE PDPL, and how to contact P Labs FZE.<br><br><a href=\"privacy/\" target=\"_blank\" rel=\"noopener noreferrer\">Open Privacy Policy →</a>",
+    "privacy policy": "Our full Privacy Policy covers what we collect, how we use it, retention, your rights under UAE PDPL, and how to contact P Labs FZE.<br><br><a href=\"privacy/\" target=\"_blank\" rel=\"noopener noreferrer\">Open Privacy Policy →</a>",
+    "is my info private": "SocialFit is not a public feed.<br><br>Some information is private to you. Some is used by the system to understand fit. Some may appear only in specific SocialFit contexts where it is relevant.<br><br>The goal is to create better fit, not expose people unnecessarily.<br><br><a href=\"privacy/\" target=\"_blank\" rel=\"noopener noreferrer\">Read the full Privacy Policy →</a>",
+    "who sees my answers": "Your Story answers are private to you and the Philia system. They are never shown to other members. They shape how SocialFit reads your fit pattern, not how others see you.",
+    "can i delete my data": "Yes. You can request full data deletion at any time. Let us know through Ask Philia and we will process your request. Raising a ticket is the fastest path. Details are also in our <a href=\"privacy/\" target=\"_blank\" rel=\"noopener noreferrer\">Privacy Policy</a>.",
+    "can others see my id": "No. Your Philia ID is private. It is not a public profile and does not appear to other members."
+  },
+  "catIntro": {
+    "whatis": "SocialFit is a new way to find your people in a city.<br><br>It works like a living signal network. First, you build your private SocialFit Story and receive your Read. This creates your Philia ID: your private social passport inside the network.<br><br>Once your ID is active, you can choose to send a Signal: a private expression of what you need, want, or are open to in that moment.<br><br>Those Signals move through the trust graph to find resonance: people, neighbourhood Pods, Rooms, and real-world moments that fit where you are now.<br><br>The app is the signal layer. The real world is the point.<br><br>No swiping. No public feed. No performing for attention. Just a more natural way for the right people and moments to find one another.",
+    "whatnext": "Let's work out where you are. Here is how the journey works in order.",
+    "mykey": "Your Philia Key is your private access object, not a referral code. It is a trust signal. What would you like to know?",
+    "mysignal": "A Signal is a small, private expression of what you are in the mood for socially. What would you like to know?",
+    "philiaid": "Your Philia ID is your private SocialFit passport. It activates in stages as your self-read and Social Mirror complete. What would you like to understand?",
+    "threekeys": "Your three Keys build the trust layer around you and activate your Social Mirror. What would you like to know?",
+    "privacy": "SocialFit is not a public feed. Your answers, Signal, and ID are private.<br><br><a href=\"privacy/\" target=\"_blank\" rel=\"noopener noreferrer\">Read the full Privacy Policy →</a><br><br>What would you like to understand?",
+    "stuck": "Let's fix it. What are you stuck on?"
+  },
+  "catChips": {
+    "whatis": [
+      "Day in the life",
+      "How is this different?",
+      "Is this dating?",
+      "Why invite-only?",
+      "What is a Signal?"
+    ],
+    "whatnext": [
+      "Claim my Key",
+      "Start Signal",
+      "Build Story",
+      "Send Keys",
+      "What happens at launch?"
+    ],
+    "mykey": [
+      "Why did I get one?",
+      "Why do Keys expire?",
+      "My Key is not working",
+      "Can I send a Key?"
+    ],
+    "mysignal": [
+      "Show examples",
+      "Can I edit it?",
+      "Who sees it?"
+    ],
+    "philiaid": [
+      "Why is it locked?",
+      "What is Social Mirror?",
+      "Can others see it?",
+      "What is Self Archetype?"
+    ],
+    "threekeys": [
+      "Who should I choose?",
+      "What do they see?",
+      "What if they don't respond?",
+      "Can I change them?"
+    ],
+    "privacy": [
+      "Full Privacy Policy",
+      "Who sees my answers?",
+      "Who sees my Signal?",
+      "Can others see my ID?",
+      "Can I delete my data?"
+    ],
+    "stuck": [
+      "Key not working",
+      "OTP not coming",
+      "Signal not saving",
+      "Story issue",
+      "Keys issue",
+      "ID still locked",
+      "Something else"
+    ]
+  },
+  "related": {
+    "what is this": [
+      "How is this different?",
+      "Is this dating?",
+      "What is a Signal?"
+    ],
+    "how is this different": [
+      "What is this?",
+      "Is this dating?",
+      "Why invite-only?"
+    ],
+    "is this dating": [
+      "What is this?",
+      "What is a Signal?",
+      "Why invite-only?"
+    ],
+    "why invite only": [
+      "What is a Key?",
+      "What is this?"
+    ],
+    "what next": [
+      "Claim my Key",
+      "Start Signal",
+      "Build Story",
+      "Send Keys"
+    ],
+    "my key": [
+      "Why did I get one?",
+      "Why do Keys expire?",
+      "My Key is not working"
+    ],
+    "why did i get one": [
+      "What is a Key?",
+      "Can I send a Key?"
+    ],
+    "why do keys expire": [
+      "Key expired",
+      "My Key is not working"
+    ],
+    "key expired": [
+      "My Key is not working",
+      "I'm stuck"
+    ],
+    "can i send a key": [
+      "Who should I choose?",
+      "3 Keys"
+    ],
+    "my signal": [
+      "Show examples",
+      "Can I edit it?",
+      "Who sees it?"
+    ],
+    "show examples": [
+      "Can I edit it?",
+      "Who sees it?",
+      "What next?"
+    ],
+    "can i edit it": [
+      "My Signal",
+      "Who sees it?"
+    ],
+    "who sees it": [
+      "My Signal",
+      "Privacy"
+    ],
+    "philia id": [
+      "Why is it locked?",
+      "What is Social Mirror?",
+      "Can others see it?"
+    ],
+    "why is it locked": [
+      "What is Social Mirror?",
+      "3 Keys",
+      "Send Keys"
+    ],
+    "what is social mirror": [
+      "Philia ID",
+      "3 Keys",
+      "Who should I choose?"
+    ],
+    "can others see it": [
+      "Privacy",
+      "Who sees my answers?"
+    ],
+    "3 keys": [
+      "Who should I choose?",
+      "What do they see?",
+      "What if they don't respond?"
+    ],
+    "who should i choose": [
+      "What do they see?",
+      "Can I change them?"
+    ],
+    "what do they see": [
+      "3 Keys",
+      "What is Social Mirror?"
+    ],
+    "privacy": [
+      "Full Privacy Policy",
+      "Who sees my answers?",
+      "Who sees it?",
+      "Can I delete my data?"
+    ],
+    "full privacy policy": [
+      "Who sees my answers?",
+      "Can I delete my data?",
+      "Privacy"
+    ],
+    "privacy policy": [
+      "Who sees my answers?",
+      "Can I delete my data?",
+      "Privacy"
+    ],
+    "who sees my answers": [
+      "Privacy",
+      "Can others see my ID?",
+      "Full Privacy Policy"
+    ],
+    "can i delete my data": [
+      "Privacy",
+      "Full Privacy Policy",
+      "I'm stuck"
+    ]
+  },
+  "issue": {
+    "key not working": "Let's check a few things:<br>1. Open the link on the same device you received it on.<br>2. Make sure the link has not expired.<br>3. Check your internet connection.<br><br>Still not working?",
+    "otp not coming": "Let's check:<br>1. Your phone number has the correct country code.<br>2. You have SMS or WhatsApp access active.<br>3. You have waited at least 60 seconds.<br><br>Still nothing?",
+    "signal not saving": "Try refreshing and entering your Signal again. If the problem continues, let us know below and we will raise it.",
+    "story issue": "Which part of the Story Builder are you stuck on? A question, the save step, or something else?",
+    "keys issue": "What is happening with your Keys? Not sending, wrong person, or something else?",
+    "id still locked": "Your Philia ID activates once your Story is complete and at least one Social Mirror response has come in. If both are done and your ID is still locked, let us know.",
+    "my key is not working": "Let's check a few things:<br>1. Open the link on the same device you received it on.<br>2. Make sure the link has not expired.<br>3. Check your internet connection.<br><br>Still not working?",
+    "something else": "Tell us what happened and Philia Support will review it."
+  }
+}
