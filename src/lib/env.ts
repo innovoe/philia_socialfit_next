@@ -1,14 +1,16 @@
 /**
  * Runtime env for the member app.
- * Mirrors philia_socialfit/.env + js/config.js.
+ *
+ * NEXT_PUBLIC_* must be read as literal `process.env.NEXT_PUBLIC_…` keys.
+ * Next inlines those at build time; `process.env[name]` is empty in the browser
+ * and falls back to localhost.
  */
 
 function stripSlash(value: string) {
   return value.replace(/\/$/, "");
 }
 
-function readPublic(name: string, fallback: string) {
-  const raw = process.env[name];
+function readPublic(raw: string | undefined, fallback: string) {
   if (raw == null || raw.trim() === "") return fallback;
   return raw.trim();
 }
@@ -24,14 +26,14 @@ function deriveAuthBase(apiBase: string) {
 }
 
 const apiBase = stripSlash(
-  readPublic("NEXT_PUBLIC_PHILIA_API_BASE", DEFAULT_API_BASE),
+  readPublic(process.env.NEXT_PUBLIC_PHILIA_API_BASE, DEFAULT_API_BASE),
 );
 
 const authBase = stripSlash(
-  readPublic("NEXT_PUBLIC_PHILIA_AUTH_BASE", deriveAuthBase(apiBase)),
+  readPublic(process.env.NEXT_PUBLIC_PHILIA_AUTH_BASE, deriveAuthBase(apiBase)),
 );
 
-const useMocksRaw = readPublic("NEXT_PUBLIC_PHILIA_USE_MOCKS", "false");
+const useMocksRaw = readPublic(process.env.NEXT_PUBLIC_PHILIA_USE_MOCKS, "false");
 
 export const env = {
   apiBase,
