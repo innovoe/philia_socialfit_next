@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { videos } from "@/lib/assets";
 import { hasAccess } from "@/lib/session";
 import { routes } from "@/lib/routes";
@@ -44,8 +45,7 @@ function useHeroLoop(ref: React.RefObject<HTMLVideoElement | null>) {
     if (!vid) return;
     let looping = false;
     vid.style.opacity = "1";
-    vid.currentTime = 0;
-    vid.play().catch(() => {});
+    if (vid.paused) vid.play().catch(() => {});
     const onTime = () => {
       if (looping || !vid.duration) return;
       if (vid.currentTime >= vid.duration - 1.3) {
@@ -101,8 +101,9 @@ function Sentence({
 }
 
 export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: number }) {
-  const [answers, setAnswers] = useState<StoryAnswers>({});
-  const [ready, setReady] = useState(false);
+  const router = useRouter();
+  const [answers, setAnswers] = useState<StoryAnswers>(loadAnswers);
+  const [ready, setReady] = useState(true);
   const [sheetKey, setSheetKey] = useState<string | null>(null);
   const [review, setReview] = useState(false);
   const [leaving, setLeaving] = useState(false);
@@ -110,6 +111,7 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const footerRef = useRef<HTMLDivElement | null>(null);
+  const hydrated = useRef(false);
   useHeroLoop(videoRef);
 
   const sections = mode === "story" ? STORY_SECTIONS : READ_SECTIONS;
@@ -124,22 +126,29 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
     hydrateAnswersFromServer().then((next) => {
       if (cancelled) return;
       setAnswers(next);
-      const resume = computeResume(next);
+      if (hydrated.current) {
+        setReady(true);
+        return;
+      }
+      hydrated.current = true;
       if (mode === "story") {
         const early = firstIncomplete(STORY_SECTIONS, next, 0, 3);
         if (index >= 3 && early != null) {
-          window.location.replace(`${routes.story}/${early + 1}`);
+          router.replace(`${routes.story}/${early + 1}`);
+          setReady(true);
           return;
         }
         if (index >= 3 && firstIncomplete(READ_SECTIONS, next) != null) {
-          window.location.replace(resumeUrl({ kind: "read", index: firstIncomplete(READ_SECTIONS, next)! }));
+          router.replace(resumeUrl({ kind: "read", index: firstIncomplete(READ_SECTIONS, next)! }));
+          setReady(true);
           return;
         }
       }
       if (mode === "read") {
         const early = firstIncomplete(STORY_SECTIONS, next, 0, 3);
         if (early != null) {
-          window.location.replace(`${routes.story}/${early + 1}`);
+          router.replace(`${routes.story}/${early + 1}`);
+          setReady(true);
           return;
         }
       }
@@ -148,7 +157,23 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
     return () => {
       cancelled = true;
     };
-  }, [mode, index]);
+  }, []);
+
+  useEffect(() => {
+    setLeaving(false);
+    setReview(false);
+    const nextUrl =
+      mode === "story"
+        ? index >= STORY_SECTIONS.length - 1
+          ? null
+          : index === 2
+            ? `${routes.read}/1`
+            : `${routes.story}/${index + 2}`
+        : index >= READ_SECTIONS.length - 1
+          ? `${routes.story}/4`
+          : `${routes.read}/${index + 2}`;
+    if (nextUrl) router.prefetch(nextUrl);
+  }, [index, mode, router]);
 
   useEffect(() => {
     const scroll = scrollRef.current;
@@ -225,7 +250,9 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
 
   function go(url: string) {
     setLeaving(true);
-    window.setTimeout(() => window.location.assign(url), 240);
+    window.setTimeout(() => {
+      router.push(url);
+    }, 160);
   }
 
   function onContinue() {
@@ -253,30 +280,30 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
   function onBack() {
     if (mode === "read") {
       if (index === 0) {
-        window.location.assign(`${routes.story}/3`);
+        router.push(`${routes.story}/3`);
         return;
       }
-      window.location.assign(`${routes.read}/${index}`);
+      router.push(`${routes.read}/${index}`);
       return;
     }
     if (index === 3) {
-      window.location.assign(`${routes.read}/4`);
+      router.push(`${routes.read}/4`);
       return;
     }
-    if (index > 0) window.location.assign(`${routes.story}/${index}`);
+    if (index > 0) router.push(`${routes.story}/${index}`);
   }
 
   function onReviewContinue() {
     const postRead = readComplete(answers);
     if (!postRead) {
       setReview(false);
-      window.location.assign(`${routes.read}/1`);
+      router.push(`${routes.read}/1`);
       return;
     }
     const late = firstIncomplete(STORY_SECTIONS, answers, 3);
     if (late != null) {
       setReview(false);
-      window.location.assign(`${routes.story}/${late + 1}`);
+      router.push(`${routes.story}/${late + 1}`);
       return;
     }
     persistAnswers(answers);
@@ -298,8 +325,6 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
           id={mode === "read" ? "readHero" : "storyHero"}
           style={{
             background: mode === "story" ? sec.bg : undefined,
-            opacity: leaving ? 0 : 1,
-            transition: leaving ? "opacity .3s" : undefined,
           }}
         >
           <video
@@ -307,6 +332,7 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
             muted
             playsInline
             preload="auto"
+            loop={false}
             style={{
               position: "absolute",
               inset: 0,
@@ -430,6 +456,7 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
 }
 
 export function StoryResume({ mode }: { mode: "story" | "read" }) {
+  const router = useRouter();
   useEffect(() => {
     if (!hasAccess()) {
       window.location.replace(routes.verify);
@@ -438,14 +465,14 @@ export function StoryResume({ mode }: { mode: "story" | "read" }) {
     const answers = loadAnswers();
     const target = computeResume(answers);
     if (mode === "story" && target.kind === "story") {
-      window.location.replace(`${routes.story}/${target.index + 1}`);
+      router.replace(`${routes.story}/${target.index + 1}`);
       return;
     }
     if (mode === "read" && target.kind === "read") {
-      window.location.replace(`${routes.read}/${target.index + 1}`);
+      router.replace(`${routes.read}/${target.index + 1}`);
       return;
     }
     window.location.replace(resumeUrl(target));
-  }, [mode]);
+  }, [mode, router]);
   return null;
 }

@@ -28,9 +28,26 @@ export function saveStoryRead(body: {
   return apiRequest<StoryReadPayload, []>(memberEndpoints.saveStoryRead, [], body);
 }
 
+type NeighbourhoodsPayload = { city?: string; options?: Neighbourhood[] };
+
+let neighbourhoodsCache: NeighbourhoodsPayload | null = null;
+let neighbourhoodsInFlight: Promise<NeighbourhoodsPayload> | null = null;
+
 export function getNeighbourhoods() {
-  return apiRequest<{ city?: string; options?: Neighbourhood[] }, []>(
+  if (neighbourhoodsCache) return Promise.resolve(neighbourhoodsCache);
+  if (neighbourhoodsInFlight) return neighbourhoodsInFlight;
+  neighbourhoodsInFlight = apiRequest<NeighbourhoodsPayload, []>(
     memberEndpoints.getNeighbourhoods,
     [],
-  );
+  )
+    .then((raw) => {
+      neighbourhoodsCache = raw;
+      neighbourhoodsInFlight = null;
+      return raw;
+    })
+    .catch((err) => {
+      neighbourhoodsInFlight = null;
+      throw err;
+    });
+  return neighbourhoodsInFlight;
 }

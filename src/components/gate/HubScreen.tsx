@@ -28,6 +28,7 @@ import {
   hubArchetypeLabel,
   hubKeysSnapshot,
   hubSegFilled,
+  keyRequestCopy,
   keyRequestCtaLabel,
   soonestKeyDeadline,
 } from "@/lib/hub";
@@ -226,6 +227,7 @@ export function HubScreen({ initialTab = 1 }: { initialTab?: 1 | 2 | 3 }) {
   const [request, setRequest] = useState<KeyRequest | null>(null);
   const [requestBusy, setRequestBusy] = useState(false);
   const [requestErr, setRequestErr] = useState("");
+  const [requestJustSent, setRequestJustSent] = useState(false);
   const [unlockOn, setUnlockOn] = useState(false);
   const [deckIdx, setDeckIdx] = useState(0);
   const [now, setNow] = useState(() => Date.now());
@@ -304,9 +306,11 @@ export function HubScreen({ initialTab = 1 }: { initialTab?: 1 | 2 | 3 }) {
       await createKeyRequest("");
       const reqs = await getKeyRequests();
       setRequest(reqs[0] || { status: "pending" });
+      setRequestJustSent(true);
     } catch (err) {
       const code = isApiError(err) ? err.code : "";
       if (code === "request_pending") {
+        setRequestJustSent(false);
         try {
           const reqs = await getKeyRequests();
           setRequest(reqs[0] || { status: "pending" });
@@ -332,6 +336,8 @@ export function HubScreen({ initialTab = 1 }: { initialTab?: 1 | 2 | 3 }) {
   const windowMs = soonestKeyDeadline(list);
   const showRequest = keys !== null && canOfferExtraKeyRequest(list, me);
   const reqStatus = String(request?.status || "").toLowerCase();
+  const reqCopy = keyRequestCopy(reqStatus, requestJustSent);
+  const reqLocked = requestBusy || reqStatus === "pending" || reqStatus === "granted";
 
   return (
     <main id="sCer7" className="screen active">
@@ -455,29 +461,23 @@ export function HubScreen({ initialTab = 1 }: { initialTab?: 1 | 2 | 3 }) {
           {showRequest ? (
             <div className={`cer7-key-card key-request${reqStatus === "pending" || reqStatus === "granted" ? " is-pending" : ""}`}>
               <div className="cer7-key-row">
-                <p className="cer7-key-name-ed">New Key</p>
+                <p className="cer7-key-name-ed">{reqCopy.title}</p>
                 <button
                   type="button"
                   className="cer7-key-cta-ed dark key-request-link"
-                  disabled={requestBusy || reqStatus === "pending" || reqStatus === "granted"}
+                  disabled={reqLocked}
                   onClick={onRequest}
                 >
                   {requestBusy ? "Sending…" : keyRequestCtaLabel(reqStatus)}
                 </button>
               </div>
-              {reqStatus !== "granted" ? (
-                <p className="key-request-copy">We&apos;ll read this and, if we agree, a Key will appear in your vault.</p>
-              ) : null}
+              <p className="key-request-copy">{reqCopy.body}</p>
               <p className="key-request-status">
                 {requestErr ||
-                  (reqStatus === "pending"
-                    ? "We already have your request."
-                    : reqStatus === "declined"
-                      ? (request?.decline_reason && String(request.decline_reason).trim()) ||
-                        "This request was declined. You can ask again."
-                      : reqStatus === "granted"
-                        ? "A Key was added to your vault."
-                        : "")}
+                  (reqStatus === "declined"
+                    ? (request?.decline_reason && String(request.decline_reason).trim()) ||
+                      "This request was declined. You can ask again."
+                    : "")}
               </p>
             </div>
           ) : null}

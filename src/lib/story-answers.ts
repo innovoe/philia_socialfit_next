@@ -16,16 +16,24 @@ import { routes } from "@/lib/routes";
 const ANSWERS_KEY = "philia_answers";
 const EMAIL_KEY = "philia_answers_email";
 
+let memoryAnswers: StoryAnswers | null = null;
+let serverHydrated = false;
+let hydrateInFlight: Promise<StoryAnswers> | null = null;
+
 export function loadAnswers(): StoryAnswers {
+  if (memoryAnswers) return memoryAnswers;
   try {
     const raw = localStorage.getItem(ANSWERS_KEY);
-    return raw ? (JSON.parse(raw) as StoryAnswers) : {};
+    memoryAnswers = raw ? (JSON.parse(raw) as StoryAnswers) : {};
+    return memoryAnswers;
   } catch {
-    return {};
+    memoryAnswers = {};
+    return memoryAnswers;
   }
 }
 
 export function writeAnswers(answers: StoryAnswers) {
+  memoryAnswers = answers;
   try {
     localStorage.setItem(ANSWERS_KEY, JSON.stringify(answers));
     const email = readSession().founderEmail;
@@ -61,15 +69,24 @@ export function persistAnswers(answers: StoryAnswers) {
 
 export async function hydrateAnswersFromServer() {
   if (!hasAccess()) return loadAnswers();
-  try {
-    const r = await getStoryRead();
-    const next: StoryAnswers = {};
-    Object.assign(next, r.story_blanks || {}, r.read_blanks || {});
-    writeAnswers(next);
-    return next;
-  } catch {
-    return loadAnswers();
-  }
+  if (serverHydrated && memoryAnswers) return memoryAnswers;
+  if (hydrateInFlight) return hydrateInFlight;
+  hydrateInFlight = (async () => {
+    try {
+      const r = await getStoryRead();
+      const next: StoryAnswers = {};
+      Object.assign(next, r.story_blanks || {}, r.read_blanks || {});
+      writeAnswers(next);
+      serverHydrated = true;
+      return next;
+    } catch {
+      serverHydrated = true;
+      return loadAnswers();
+    } finally {
+      hydrateInFlight = null;
+    }
+  })();
+  return hydrateInFlight;
 }
 
 export type ResumeTarget =
@@ -98,6 +115,9 @@ export function readComplete(answers: StoryAnswers) {
 }
 
 export function clearStoryProgress() {
+  memoryAnswers = null;
+  serverHydrated = false;
+  hydrateInFlight = null;
   try {
     localStorage.removeItem(ANSWERS_KEY);
     localStorage.removeItem(EMAIL_KEY);

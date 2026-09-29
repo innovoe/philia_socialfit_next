@@ -162,6 +162,32 @@ export function keyRequestCtaLabel(st: string | null | undefined) {
   return "Request →";
 }
 
+export function keyRequestCopy(status: string | null | undefined, justSent = false) {
+  const st = String(status || "").toLowerCase();
+  if (st === "pending" && justSent) {
+    return {
+      title: "Request received",
+      body: "We’ll review your request. If approved, another Key will appear in your vault.",
+    };
+  }
+  if (st === "pending") {
+    return {
+      title: "Request already pending",
+      body: "We have your request. There’s no need to send another.",
+    };
+  }
+  if (st === "granted") {
+    return {
+      title: "Granted",
+      body: "A Key was added to your vault.",
+    };
+  }
+  return {
+    title: "Request another Philia Key",
+    body: "Used your first three? Request another to invite someone else into SocialFit.",
+  };
+}
+
 export function membershipPackageLabel(choice: MembershipChoice | null | undefined) {
   if (!choice || !choice.tier) return "";
   const cap = choice.tier.charAt(0).toUpperCase() + choice.tier.slice(1);

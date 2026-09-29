@@ -361,6 +361,7 @@
 /* Key tracker — white cards */
 .cer7-tracker{display:flex;flex-direction:column;gap:10px;margin:16px 0 0}
 .cer7-key-card.key-request{margin-top:10px}
+.cer7-key-card.key-request .cer7-key-name-ed{line-height:1.2;max-width:min(100%,220px)}
 .key-request[hidden]{display:none!important}
 .key-request-copy{font-family:Inter,sans-serif;font-size:12.5px;line-height:1.5;font-weight:300;color:#4f5364;margin:0}
 .key-request-status{font-family:Inter,sans-serif;font-size:12px;line-height:1.45;font-weight:300;color:rgba(32,32,52,.50);margin:8px 0 0}

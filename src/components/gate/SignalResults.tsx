@@ -301,7 +301,9 @@ export function SignalResults() {
           <p className="res-cta-sub">
             {hasAccess()
               ? "Next: Story Builder"
-              : "Next: verify email & phone to claim access"}
+              : hasFounderKey()
+                ? "Next: verify your phone to claim access"
+                : "Next: verify email & phone to claim access"}
           </p>
         </section>
       </div>

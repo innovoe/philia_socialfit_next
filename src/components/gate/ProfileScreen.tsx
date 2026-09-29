@@ -10,8 +10,9 @@ import {
   type Me,
 } from "@/lib/api/member";
 import { createKeyRequest } from "@/lib/api/keys";
+import { isApiError } from "@/lib/api/errors";
 import { applyPassportToSession, memberDisplayName } from "@/lib/ceremony";
-import { goHub, goLogout, keyRequestCtaLabel } from "@/lib/hub";
+import { goHub, goLogout, keyRequestCopy, keyRequestCtaLabel } from "@/lib/hub";
 import { ProfileIdentity } from "@/components/gate/ProfileIdentity";
 import { emitWorldsBadge, memberInitials, PROFILE_WORLDS, profileTierLine, type WorldId } from "@/lib/profile";
 import { patchMeError } from "@/lib/identity";
@@ -112,6 +113,7 @@ export function ProfileScreen() {
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState("");
   const [note, setNote] = useState("");
+  const [requestJustSent, setRequestJustSent] = useState(false);
 
   function applyIdentity(next: Me) {
     applyMeToSession(next);
@@ -205,16 +207,18 @@ export function ProfileScreen() {
   }
 
   async function onRequestKeys() {
+    if (me?.request_pending) return;
     setBusy("keys");
     setErr("");
     setNote("");
     try {
       await createKeyRequest("");
       applyIdentity(await getMe());
-      setNote("Request sent");
-      window.setTimeout(() => setNote(""), 1600);
+      setRequestJustSent(true);
     } catch (e) {
-      setErr(patchMeError(e));
+      const code = isApiError(e) ? e.code : "";
+      if (code === "request_pending") setRequestJustSent(false);
+      else setErr(patchMeError(e));
       try {
         applyIdentity(await getMe());
       } catch {
@@ -233,11 +237,8 @@ export function ProfileScreen() {
   const explorerActive = String(me?.state || "").toLowerCase() === "explorer_active";
   const showKeyRequest = !!(me && (me.can_request || me.request_pending || explorerActive));
   const keyRequestEnabled = !!me?.can_request && busy !== "keys";
-  const keyRequestLabel = me?.request_pending
-    ? keyRequestCtaLabel("pending")
-    : busy === "keys"
-      ? "Sending…"
-      : "Request More Keys →";
+  const reqCopy = keyRequestCopy(me?.request_pending ? "pending" : "", requestJustSent);
+  const keyRequestLabel = busy === "keys" ? "Sending…" : keyRequestEnabled ? "Request →" : keyRequestCtaLabel(me?.request_pending ? "pending" : "");
 
   return (
     <main
@@ -652,14 +653,8 @@ export function ProfileScreen() {
           ) : null}
           {showKeyRequest ? (
             <LinkRow
-              title="Request More Keys"
-              sub={
-                me?.request_pending
-                  ? "Request sent"
-                  : keysQuota
-                    ? `${keysUsed} / ${keysQuota} in use`
-                    : "Ask for an extra Key"
-              }
+              title={reqCopy.title}
+              sub={reqCopy.body}
               onClick={() => {
                 if (!keyRequestEnabled) return;
                 void onRequestKeys();
@@ -753,7 +748,7 @@ export function ProfileScreen() {
                 color: "rgba(32,32,52,.65)",
               }}
             >
-              {keyRequestLabel}
+              {me?.request_pending ? reqCopy.title : keyRequestLabel}
             </button>
           ) : null}
         </div>

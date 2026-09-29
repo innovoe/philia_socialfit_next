@@ -16,12 +16,12 @@ export function VerifyGate() {
       return;
     }
     const s = readSession();
-    if (isInviteSession() && s.keyId != null) {
-      setMode("invite");
-      return;
-    }
     if (hasFounderKey()) {
       setMode("founder");
+      return;
+    }
+    if (isInviteSession() && s.keyId != null) {
+      setMode("invite");
       return;
     }
     window.location.replace(routes.origins);

@@ -254,11 +254,11 @@ export function VerifyForm() {
             disabled={!canSend}
             type="submit"
           >
-            <span>Send codes</span>
+            <span>{busy ? "Sending…" : "Send code"}</span>
             <span>→</span>
           </button>
           <p className="verify-legal">
-            By clicking the “Send codes” button you are agreeing with our{" "}
+            By clicking the “Send code” button you are agreeing with our{" "}
             <Link href={routes.terms} target="_blank" rel="noopener noreferrer">
               Terms
             </Link>{" "}
@@ -285,7 +285,7 @@ export function VerifyForm() {
             <label className="verify-label">Phone code</label>
             <OtpInput label="Phone code" onChange={setCode} disabled={busy} />
             <button className="verify-resend" type="button" onClick={onResend} disabled={busy}>
-              Resend codes
+              Resend code
             </button>
           </div>
           <p className="verify-error" style={{ opacity: error ? 1 : 0 }}>

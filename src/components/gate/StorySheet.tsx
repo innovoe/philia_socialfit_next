@@ -104,7 +104,6 @@ export function StorySheet({
     setSearch("");
     setPartnership(String(answers.partnershipNote || ""));
     if (isPod) {
-      setPods(null);
       setPodsError(false);
       getNeighbourhoods()
         .then((raw) => {

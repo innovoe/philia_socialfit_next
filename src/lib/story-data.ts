@@ -959,42 +959,50 @@ export const SB_FIELDS = {
   },
   "chapter": {
     "label": "Name this chapter",
-    "hint": "Pick up to 3. Your first tap is your primary chapter.",
+    "hint": "What best describes the chapter you are in now? This adds further context for the trust graph for curated events.\n\nChoose up to three, starting with the one that matters most.",
     "type": "rank",
     "min": 1,
     "max": 3,
     "options": [
       {
-        "main": "The Pivot",
-        "sub": "Changing direction with intention"
+        "main": "New here",
+        "sub": "I want to find my feet and meet people."
       },
       {
-        "main": "The Build",
-        "sub": "Creating something from nothing"
+        "main": "Settled, but something’s missing",
+        "sub": "I know people, but I want deeper connections and a stronger sense of belonging."
       },
       {
-        "main": "The Arrival",
-        "sub": "Landing somewhere that finally fits"
+        "main": "Looking for my people",
+        "sub": "I want to meet people I feel comfortable being myself around."
       },
       {
-        "main": "The Deepening",
-        "sub": "Going further into what already exists"
+        "main": "Rebuilding after a change",
+        "sub": "My life has changed, and I’m ready to reconnect at my own pace."
       },
       {
-        "main": "The Search",
-        "sub": "Not yet found, but actively looking"
+        "main": "Ready to expand my world",
+        "sub": "I have a circle, but I’m curious about new people, ideas and experiences."
       },
       {
-        "main": "The Expansion",
-        "sub": "Wider, bolder, more"
+        "main": "Building something",
+        "sub": "I’m working towards a project, business or career ambition and want people to exchange ideas with."
       },
       {
-        "main": "The Return",
-        "sub": "Coming back to something I left"
+        "main": "Open to a relationship",
+        "sub": "I’m open to a romantic connection that grows naturally through shared social experiences."
       },
       {
-        "main": "The Unknown",
-        "sub": "I do not have a name for it yet"
+        "main": "Building my social confidence",
+        "sub": "I want to feel more comfortable meeting people and developing relationships."
+      },
+      {
+        "main": "Ready to contribute",
+        "sub": "I want to bring people together, share what I know or support others."
+      },
+      {
+        "main": "Making space for myself",
+        "sub": "Alongside my relationship or family life, I want friendships and interests of my own."
       }
     ]
   },
@@ -1355,7 +1363,7 @@ export const READ_SECTIONS: StorySection[] = [
   },
   {
     l: "Chapter",
-    h: "The feeling of where you are right now. Name this chapter as it actually is.",
+    h: "What best describes the chapter you are in now? This adds further context for the trust graph for curated events.",
     bg: "linear-gradient(160deg,#8A7060 0%,#B09A88 45%,#D4C4B4 100%)",
     keys: ["chapter"],
   },
