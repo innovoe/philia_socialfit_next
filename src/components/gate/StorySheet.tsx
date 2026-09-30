@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { getNeighbourhoods, type Neighbourhood } from "@/lib/api/story";
 import {
   FREETEXT_KEYS,
+  FREQUENT_VARIES,
+  FREQUENT_VARIES_SUB,
   HOME_ANOTHER,
   HOME_ANOTHER_SUB,
   PILL_KEYS,
@@ -18,7 +20,7 @@ import {
 
 type Pod = { name: string; hint: string };
 type HomeRow = {
-  kind: "pod" | "area" | "another" | "fromhome";
+  kind: "pod" | "area" | "another" | "fromhome" | "varies";
   main: string;
   sub: string;
   value: string;
@@ -91,7 +93,7 @@ export function StorySheet({
   const [podsError, setPodsError] = useState(false);
   const [search, setSearch] = useState("");
 
-  const isPod = fieldKey === "home" || fieldKey === "work";
+  const isPod = fieldKey === "home" || fieldKey === "work" || fieldKey === "frequent";
   const isMulti = field?.type === "multi" || field?.type === "rank";
 
   useEffect(() => {
@@ -122,10 +124,13 @@ export function StorySheet({
   const rows = useMemo(() => {
     if (!isPod || !pods) return [];
     const list = homeSearchRows(pods, search);
-    if (fieldKey === "home") {
-      list.push({ kind: "another", main: HOME_ANOTHER, sub: HOME_ANOTHER_SUB, value: HOME_ANOTHER });
-    } else {
+    if (fieldKey === "work") {
       list.push({ kind: "fromhome", main: WORK_FROM_HOME, sub: WORK_FROM_HOME_SUB, value: WORK_FROM_HOME });
+    } else {
+      if (fieldKey === "frequent") {
+        list.push({ kind: "varies", main: FREQUENT_VARIES, sub: FREQUENT_VARIES_SUB, value: FREQUENT_VARIES });
+      }
+      list.push({ kind: "another", main: HOME_ANOTHER, sub: HOME_ANOTHER_SUB, value: HOME_ANOTHER });
     }
     return list;
   }, [isPod, pods, search, fieldKey]);
@@ -158,9 +163,9 @@ export function StorySheet({
 
   function confirmOther() {
     const val = otherVal.trim();
-    if (fieldKey === "home") {
+    if (fieldKey === "home" || fieldKey === "frequent") {
       if (!val) {
-        pickSingle(HOME_ANOTHER);
+        if (fieldKey === "home") pickSingle(HOME_ANOTHER);
         return;
       }
       pickSingle(resolveHome(pods || [], val) || val);
@@ -200,8 +205,13 @@ export function StorySheet({
                   pickSingle(WORK_FROM_HOME);
                   return;
                 }
+                if (fieldKey === "frequent" && q.toLowerCase() === FREQUENT_VARIES.toLowerCase()) {
+                  pickSingle(FREQUENT_VARIES);
+                  return;
+                }
                 const mapped = resolveHome(pods || [], q);
                 if (mapped) pickSingle(mapped);
+                else if (fieldKey === "frequent") pickSingle(q);
               }}
             />
           </div>
@@ -248,7 +258,9 @@ export function StorySheet({
                     <p className="sb-home-status">
                       {fieldKey === "home"
                         ? "Nothing in the Pod list matches. Type your neighbourhood — this may waitlist you if it isn’t a Dubai Pod area."
-                        : "Nothing in the Pod list matches. Choose From home if you work remotely."}
+                        : fieldKey === "frequent"
+                          ? "Nothing in the Pod list matches. Type another area, or choose Varies."
+                          : "Nothing in the Pod list matches. Choose From home if you work remotely."}
                     </p>
                   ) : null}
                   {rows.map((row) => {
@@ -275,7 +287,7 @@ export function StorySheet({
                       </button>
                     );
                   })}
-                  {fieldKey === "home" ? (
+                  {fieldKey === "home" || fieldKey === "frequent" ? (
                     <div className="sb-other-row">
                       <button
                         className="sb-other-btn"

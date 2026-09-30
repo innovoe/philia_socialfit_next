@@ -203,7 +203,7 @@ body:has(#flexNav.fn-open) .sty-scroll-cue#readScrollCue,
 /* story screens hide the nav pill — no bottom padding needed for it */
 #sStory,#sRead,.sty-screen.sty-read{padding-bottom:0!important}
 /* HUB video hero cards — taller for better video quality */
-#sCer7 .sty-hero{height:290px}
+#sCer7 .sty-hero,.social-fabric .sty-hero{height:290px}
 /* hide the inline timer pill — global founderKeyBar is used instead */
 #sStory .sty-timer,#sRead .sty-timer,.sty-screen .sty-timer{display:none!important}
 /* lift founderKeyBar above the fixed footer on sStory/sRead */

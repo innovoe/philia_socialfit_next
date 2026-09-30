@@ -43,6 +43,8 @@ export const HOME_ANOTHER = "Another neighbourhood";
 export const HOME_ANOTHER_SUB = "My own corner of the city";
 export const WORK_FROM_HOME = "From home";
 export const WORK_FROM_HOME_SUB = "My space is my office";
+export const FREQUENT_VARIES = "Varies";
+export const FREQUENT_VARIES_SUB = "I follow the energy, not the place";
 
 export const SOCIAL_STANCES = [
   "here purely for my personal life",
@@ -176,48 +178,7 @@ export const SB_FIELDS = {
     "label": "I usually move around…",
     "hint": "Your most frequent area outside home/work",
     "type": "single",
-    "options": [
-      {
-        "main": "DIFC",
-        "sub": "Finance, fine dining, familiar faces"
-      },
-      {
-        "main": "Downtown",
-        "sub": "Urban, visible, always moving"
-      },
-      {
-        "main": "Business Bay",
-        "sub": "Ambitious, sleek, always-on"
-      },
-      {
-        "main": "Dubai Marina",
-        "sub": "Social, coastal, fast-moving"
-      },
-      {
-        "main": "JLT",
-        "sub": "Practical, eclectic, independent"
-      },
-      {
-        "main": "Meydan",
-        "sub": "Space, sport, new money energy"
-      },
-      {
-        "main": "Dubai Hills",
-        "sub": "Suburban quiet, slow pace"
-      },
-      {
-        "main": "Jumeirah",
-        "sub": "Residential, grounded, local"
-      },
-      {
-        "main": "Al Quoz / Media City",
-        "sub": "Creative, industrial, curious"
-      },
-      {
-        "main": "Varies",
-        "sub": "I follow the energy, not the place"
-      }
-    ]
+    "options": []
   },
   "travel": {
     "label": "For the right setting, I'm…",

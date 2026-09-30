@@ -38,10 +38,12 @@ export default function VerifiedPage() {
   return (
     <main className="verified-wrap">
       <div className="verified-body">
-        <div className="verified-check">
-          <span>✓</span>
+        <div className="verified-title">
+          <div className="verified-check" aria-hidden="true">
+            <span>✓</span>
+          </div>
+          <h1 className="verified-head">You&apos;re verified.</h1>
         </div>
-        <h1 className="verified-head">You&apos;re verified.</h1>
         <div className="verified-card">
           <video autoPlay muted loop playsInline preload="auto">
             <source src={videos.keyIsLive} type="video/mp4" />

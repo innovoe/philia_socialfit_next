@@ -30,14 +30,14 @@ export function cer5BuildMsg(name: string, invite?: KeyInvite | null) {
   const code = invite?.invite_code ? String(invite.invite_code) : "";
   let linkLine = "";
   if (url) {
-    linkLine = (code ? `\n\nYour invite code: ${code}` : "") + `\n\n${url}`;
+    linkLine = (code ? `\n\nYour invite code: ${code}` : "") + `\n\n${url}\n\nSee you inside!`;
   } else if (code) {
-    linkLine = `\n\nYour invite code: ${code}`;
+    linkLine = `\n\nYour invite code: ${code}\n\nSee you inside!`;
   } else {
     linkLine = "\n\nI’ll share your private invite once it’s ready.";
   }
   return (
-    `Hey ${nm}! I’m activating my Philia ID for SocialFit, and I chose you as one of my 3 social mirrors because you’re someone I trust and respect.\n\n` +
+    `Hey ${nm}! I’m activating my Philia ID for SocialFit — a Social Intelligence platform built on trust, and I chose you as one of my 3 social mirrors because you’re someone I trust and respect.\n\n` +
     `You’ll get one private question:\n“How do you see me socially?”\n\n` +
     `Your answer helps unlock my Social Archetype: how I’m perceived by people who’ve actually experienced me in real life. I will see the archetype you choose, together with the combined pattern from my three Keys.\n\n` +
     `This Philia Key gives you a private path into SocialFit’s invite-only access, if it feels right for you.\n\n` +

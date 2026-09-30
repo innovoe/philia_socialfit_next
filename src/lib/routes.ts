@@ -7,6 +7,7 @@ export const routes = {
   originsClaim: "/origins/claim",
   founder: "/founder",
   demo: "/demo",
+  demoEnter: "/demo/enter",
   demoIntro: "/demo/intro",
   demoBuild: "/demo/build",
   demoResults: "/demo/results",
