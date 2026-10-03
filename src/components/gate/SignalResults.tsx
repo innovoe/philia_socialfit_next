@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { hasAccess, hasFounderKey } from "@/lib/session";
 import { routes } from "@/lib/routes";
+import { completeSignalDemo } from "@/lib/api/signal-demo";
 import { canPlaySignalDemo, RESULT_PEOPLE, RESULT_ROOMS, TAB_DESC, takeSignalReturn } from "@/lib/signal-demo";
 import { destroyAnim, playTrustGraph, type PlayGate } from "@/lib/lottie";
 
@@ -135,7 +136,12 @@ export function SignalResults() {
     setProgress(0);
   }
 
-  function leave() {
+  async function leave() {
+    try {
+      await completeSignalDemo();
+    } catch {
+      /* event write must not block the existing finish CTA */
+    }
     const back = takeSignalReturn();
     if (back) {
       window.location.assign(back);

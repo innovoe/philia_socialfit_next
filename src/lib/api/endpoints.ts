@@ -72,6 +72,12 @@ export const publicEndpoints = {
   ),
   sendOtp: socialfit("POST", false, "sendOtp", () => "/auth/otp/send/"),
   verifyOtp: socialfit("POST", false, "verifyOtp", () => "/auth/otp/verify/"),
+  completeSignalDemo: socialfit(
+    "POST",
+    false,
+    "completeSignalDemo",
+    () => "/signal-demo/complete/",
+  ),
 } as const;
 
 /** Member-authed SocialFit routes (Bearer access token). */

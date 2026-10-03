@@ -28,6 +28,7 @@ export { validateKeyCode, submitKeyMirror, isInvitePayload } from "@/lib/api/key
 export { getMyKeys, sendKey, getKeyRequests, createKeyRequest } from "@/lib/api/keys";
 export { getNeighbourhoods, getStoryRead, saveStoryRead } from "@/lib/api/story";
 export { mapOtpError, sendOtp, verifyOtp } from "@/lib/api/otp";
+export { completeSignalDemo } from "@/lib/api/signal-demo";
 export { normalizeUaePhone, sanitizeContactField, sanitizeUaeLocalInput } from "@/lib/api/phone";
 export {
   authEndpoints,
