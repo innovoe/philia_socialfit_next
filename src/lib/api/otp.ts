@@ -89,5 +89,14 @@ export function mapOtpError(code: string) {
   if (code === "invalid_key" || code === "not_found") {
     return "This Key can’t be claimed — it may be used or unopened.";
   }
+  if (code === "own_key") {
+    return "You’re signed in as the person who sent this Key. Log out, then open the invite as the friend.";
+  }
+  if (code === "invalid_state") {
+    return "This Key isn’t waiting to be claimed. It may already be claimed, still unsent, or activated. The countdown can still look open.";
+  }
+  if (code === "claim_failed") {
+    return "This Key can’t be claimed from this account. Log out and open the invite as the friend — or the Key is no longer waiting to be claimed.";
+  }
   return "Could not continue — try again.";
 }

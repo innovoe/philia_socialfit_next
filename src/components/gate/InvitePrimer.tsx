@@ -2,14 +2,26 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { videos } from "@/lib/assets";
+import { getMe } from "@/lib/api/member";
+import { isApiError } from "@/lib/api/errors";
+import { mapOtpError } from "@/lib/api/otp";
+import { goLogout } from "@/lib/hub";
 import {
+  claimInviteKey,
   formatClaimClock,
   inviteOwnerName,
   isInviteSession,
   sentenceStartName,
 } from "@/lib/invite";
-import { readSession } from "@/lib/session";
+import { hasAccess, readSession } from "@/lib/session";
+import { resumeMember } from "@/lib/resume";
 import { routes } from "@/lib/routes";
+
+function errorCode(err: unknown) {
+  if (isApiError(err)) return err.code;
+  if (err instanceof Error) return err.message;
+  return "";
+}
 
 export function InvitePrimer() {
   const [ready, setReady] = useState(false);
@@ -17,6 +29,9 @@ export function InvitePrimer() {
   const [clock, setClock] = useState("—");
   const [openAcc, setOpenAcc] = useState(false);
   const [openFrame, setOpenFrame] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [errorCodeName, setErrorCodeName] = useState("");
 
   useEffect(() => {
     const s = readSession();
@@ -41,6 +56,42 @@ export function InvitePrimer() {
     const id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);
   }, [ready]);
+
+  async function onStart() {
+    setError("");
+    setErrorCodeName("");
+    if (!hasAccess()) {
+      window.location.assign(routes.verify);
+      return;
+    }
+    setBusy(true);
+    try {
+      const { me } = await claimInviteKey(readSession().access || "");
+      if (me && me.needs_onboarding === false) {
+        await resumeMember(me);
+        return;
+      }
+      window.location.assign(routes.verified);
+    } catch (err) {
+      const code = errorCode(err);
+      if (code === "already_member") {
+        try {
+          const me = await getMe();
+          await resumeMember(me);
+        } catch {
+          window.location.replace(routes.login);
+        }
+        return;
+      }
+      if (code === "already_claimed" || code === "key_already_claimed" || code === "claimed") {
+        window.location.assign(routes.verified);
+        return;
+      }
+      setErrorCodeName(code);
+      setError(mapOtpError(code));
+      setBusy(false);
+    }
+  }
 
   if (!ready) return null;
 
@@ -299,6 +350,37 @@ export function InvitePrimer() {
               </p>
             </div>
           </div>
+        </div>
+        <div className="inv-primer-bottom">
+          {error ? (
+            <p className="inv-mirror-err is-on" style={{ display: "block", marginBottom: 12 }}>
+              {error}
+            </p>
+          ) : null}
+          <button className="inv-start-btn" type="button" onClick={onStart} disabled={busy}>
+            <span>{busy ? "Claiming…" : "Start SocialFit"}</span>
+            <span>→</span>
+          </button>
+          {errorCodeName === "own_key" || errorCodeName === "claim_failed" ? (
+            <button
+              className="inv-primer-micro"
+              type="button"
+              onClick={() => goLogout()}
+              style={{
+                display: "block",
+                width: "100%",
+                marginTop: 14,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "rgba(32,32,52,.45)",
+              }}
+            >
+              Log out and open the invite as the friend
+            </button>
+          ) : (
+            <p className="inv-primer-micro">Claim window · ends at UAE mobile verification</p>
+          )}
         </div>
       </section>
     </main>

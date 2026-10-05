@@ -113,12 +113,8 @@ export function InviteVerifyForm() {
         entryPath: "invite",
       });
       try {
-        const { claim, me } = await claimInviteKey(tokens.access);
-        const needs =
-          typeof claim.needs_onboarding === "boolean"
-            ? claim.needs_onboarding
-            : me?.needs_onboarding !== false;
-        if (!needs && me) {
+        const { me } = await claimInviteKey(tokens.access);
+        if (me && me.needs_onboarding === false) {
           await resumeMember(me);
           return;
         }
@@ -142,11 +138,7 @@ export function InviteVerifyForm() {
           window.location.assign(routes.verified);
           return;
         }
-        setError(
-          mapOtpError(claimCode) === "Could not continue — try again."
-            ? "Verified, but Key claim failed — code may already be used. Ask ops for a fresh opened Key."
-            : mapOtpError(claimCode),
-        );
+        setError(mapOtpError(claimCode));
         setBusy(false);
       }
     } catch (err) {
