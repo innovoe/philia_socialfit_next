@@ -107,6 +107,8 @@ export function sendKeyErrorMessage(code: string) {
     return "Name and contact are required.";
   }
   if (code === "send_window_expired") return "This Key’s send window has closed.";
+  if (code === "phone_taken") return "This number is already taken.";
+  if (code === "email_taken") return "This email is already taken.";
   return "Could not send — check contact and try again.";
 }
 

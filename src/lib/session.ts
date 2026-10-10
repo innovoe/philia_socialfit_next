@@ -42,6 +42,8 @@ export type GateSession = {
   mirrorQuestion: string | null;
   mirrorAnswered: boolean;
   keyType: string | null;
+  phoneVerified: boolean;
+  phoneMask: string | null;
 };
 
 const KEY = "philia_gate";
@@ -77,6 +79,8 @@ const empty: GateSession = {
   mirrorQuestion: null,
   mirrorAnswered: false,
   keyType: null,
+  phoneVerified: false,
+  phoneMask: null,
 };
 
 function canUseStorage() {

@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { isApiError } from "@/lib/api/errors";
+import { refusalLine } from "@/lib/api/errors";
 import {
   getMyKeys,
   outboundClockMs,
@@ -223,8 +223,7 @@ export function KeysNominate() {
       }
       getMyKeys().then(setKeys).catch(() => {});
     } catch (err) {
-      const code = isApiError(err) ? err.code : "";
-      patchDraft(n, { sending: false, error: sendKeyErrorMessage(code) });
+      patchDraft(n, { sending: false, error: refusalLine(err, sendKeyErrorMessage) });
     }
   }
 

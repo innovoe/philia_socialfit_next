@@ -3,13 +3,20 @@ import { endpoints, type ApiBase, type Endpoint } from "@/lib/api/endpoints";
 
 export { env } from "@/lib/env";
 export { apiRequest, apiFormRequest } from "@/lib/api/client";
-export { ApiError, isApiError } from "@/lib/api/errors";
+export {
+  ApiError,
+  isApiError,
+  readApiRefusal,
+  refusalGoesToLogin,
+  refusalLine,
+} from "@/lib/api/errors";
 export {
   founderClaimKey,
   founderEmailStart,
   founderEmailVerify,
   isValidEmail,
   mapOriginsError,
+  readClaimPhone,
 } from "@/lib/api/origins";
 export {
   claimKey,
@@ -27,7 +34,7 @@ export {
 export { validateKeyCode, submitKeyMirror, isInvitePayload } from "@/lib/api/key-entry";
 export { getMyKeys, sendKey, getKeyRequests, createKeyRequest } from "@/lib/api/keys";
 export { getNeighbourhoods, getStoryRead, saveStoryRead } from "@/lib/api/story";
-export { mapOtpError, sendOtp, verifyOtp } from "@/lib/api/otp";
+export { mapOtpError, readOtpSend, sendOtp, verifyOtp } from "@/lib/api/otp";
 export { completeSignalDemo } from "@/lib/api/signal-demo";
 export { normalizeUaePhone, sanitizeContactField, sanitizeUaeLocalInput } from "@/lib/api/phone";
 export {

@@ -3,15 +3,26 @@ import { publicEndpoints } from "@/lib/api/endpoints";
 import { normalizeUaePhone } from "@/lib/api/phone";
 
 export type SendOtpPayload = {
-  phone: string;
+  phone?: string;
   key_id?: number | null;
   founder_token?: string | null;
   email?: string;
 };
 
+export type SendOtpResult = {
+  sent?: boolean;
+  email_required?: boolean;
+  phone_mask?: string;
+};
+
+export type OtpSendMode = {
+  emailRequired: boolean;
+  phoneMask: string;
+};
+
 export type VerifyOtpPayload = {
-  phone: string;
-  phone_code: string;
+  phone?: string;
+  phone_code?: string;
   key_id?: number | null;
   founder_token?: string | null;
   email?: string;
@@ -24,9 +35,15 @@ export type VerifyOtpResult = {
   user_id?: number;
 };
 
-function withNormalizedPhone<T extends { phone?: string; founder_token?: string | null; key_id?: number | null }>(
-  payload: T,
-): T {
+function withNormalizedPhone<
+  T extends {
+    phone?: string;
+    founder_token?: string | null;
+    key_id?: number | null;
+    email_code?: string;
+    phone_code?: string;
+  },
+>(payload: T): T {
   const body = { ...payload };
   if (body.founder_token) {
     delete (body as { email?: string }).email;
@@ -41,13 +58,24 @@ function withNormalizedPhone<T extends { phone?: string; founder_token?: string 
       throw err;
     }
     body.phone = n;
+  } else {
+    delete body.phone;
   }
+  if (!body.email_code) delete (body as { email_code?: string }).email_code;
+  if (!body.phone_code) delete (body as { phone_code?: string }).phone_code;
   if (body.key_id == null) delete body.key_id;
   return body;
 }
 
+export function readOtpSend(result: SendOtpResult | null | undefined): OtpSendMode {
+  return {
+    emailRequired: result?.email_required !== false,
+    phoneMask: typeof result?.phone_mask === "string" ? result.phone_mask : "",
+  };
+}
+
 export function sendOtp(payload: SendOtpPayload) {
-  return apiRequest<{ sent?: boolean }, []>(
+  return apiRequest<SendOtpResult, []>(
     publicEndpoints.sendOtp,
     [],
     withNormalizedPhone(payload),
@@ -65,8 +93,8 @@ export function verifyOtp(payload: VerifyOtpPayload) {
 export function mapOtpError(code: string) {
   if (code === "invalid_phone") return "Use a UAE mobile (+9715…).";
   if (code === "invalid_email") return "Enter a valid email.";
-  if (code === "otp_invalid" || code === "invalid_code") return "Codes look wrong — try again.";
-  if (code === "otp_expired") return "Codes expired — resend and try again.";
+  if (code === "otp_invalid" || code === "invalid_code") return "That code looks wrong — try again.";
+  if (code === "otp_expired") return "Code expired — resend and try again.";
   if (code === "rate_limited" || code === "throttled" || code === "http_429") {
     return "Too many attempts — wait a moment.";
   }
@@ -76,7 +104,9 @@ export function mapOtpError(code: string) {
   if (code === "already_claimed" || code === "key_already_claimed" || code === "claimed") {
     return "This Key was already claimed. Ask for a fresh opened code.";
   }
-  if (code === "already_member") return "You’re already on SocialFit — we’ll take you to your account.";
+  if (code === "phone_taken") return "This number is already taken.";
+  if (code === "email_taken") return "This email is already taken.";
+  if (code === "already_member") return "You're already on SocialFit. Log in instead.";
   if (code === "key_expired" || code === "expired") return "This Key’s claim window has closed.";
   if (
     code === "founder_token_invalid" ||

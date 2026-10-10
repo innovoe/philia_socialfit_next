@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { founderEmailStart, isValidEmail, mapOriginsError } from "@/lib/api/origins";
-import { isApiError } from "@/lib/api/errors";
+import { readApiRefusal, refusalGoesToLogin, refusalLine } from "@/lib/api/errors";
 import { readSession, writeSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { GateChrome } from "@/components/gate/GateChrome";
@@ -14,6 +14,7 @@ export function OriginsEmailForm() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [blocked, setBlocked] = useState(false);
+  const emailRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -31,9 +32,21 @@ export function OriginsEmailForm() {
     }
     const saved = fromUrl || readSession().founderEmail;
     if (saved) setEmail(saved);
+    const id = window.setTimeout(() => {
+      const filled = emailRef.current?.value?.trim() || "";
+      if (filled) setEmail(filled);
+    }, 300);
+    return () => window.clearTimeout(id);
   }, [router]);
 
   const ready = isValidEmail(email) && !busy && !blocked;
+
+  function applyEmail(value: string) {
+    setEmail(value);
+    setError("");
+    setBlocked(false);
+    setBusy(false);
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,13 +66,13 @@ export function OriginsEmailForm() {
       });
       window.location.assign(routes.originsCode);
     } catch (err) {
-      const code = isApiError(err) ? err.code : "";
-      if (code === "already_member") {
+      const { code } = readApiRefusal(err);
+      if (refusalGoesToLogin(err)) {
         writeSession({ founderEmail: value, entryPath: "founder" });
         window.location.assign(routes.login);
         return;
       }
-      setError(mapOriginsError(code));
+      setError(refusalLine(err, mapOriginsError));
       setBusy(false);
       if (code === "unknown_email") setBlocked(true);
     }
@@ -85,13 +98,18 @@ export function OriginsEmailForm() {
           autoComplete="email"
           autoCapitalize="none"
           spellCheck={false}
+          ref={emailRef}
           placeholder="YOUR EMAIL"
           value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            setError("");
-            setBlocked(false);
+          onChange={(e) => applyEmail(e.target.value)}
+          onInput={(e) => applyEmail((e.target as HTMLInputElement).value)}
+          onPaste={(e) => {
+            const text = (e.clipboardData?.getData("text") || "").trim();
+            if (!text) return;
+            e.preventDefault();
+            applyEmail(text);
           }}
+          onBlur={(e) => applyEmail(e.target.value)}
         />
         <p className="gate-error" style={{ opacity: error ? 1 : 0 }}>
           {error || " "}

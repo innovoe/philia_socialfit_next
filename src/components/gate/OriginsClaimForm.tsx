@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { founderClaimKey, mapOriginsError } from "@/lib/api/origins";
-import { isApiError } from "@/lib/api/errors";
+import { founderClaimKey, mapOriginsError, readClaimPhone } from "@/lib/api/origins";
+import { readApiRefusal, refusalGoesToLogin, refusalLine } from "@/lib/api/errors";
 import { hasFounderToken, readSession, writeSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { GateChrome } from "@/components/gate/GateChrome";
@@ -30,17 +30,20 @@ export function OriginsClaimForm() {
     setBusy(true);
     try {
       const result = await founderClaimKey(token);
+      const phone = readClaimPhone(result);
       writeSession({
         keyId: result.key_id,
         keyCode: result.code || null,
         claimDeadline: result.claim_deadline || null,
         founderEmail: result.email || readSession().founderEmail,
         entryPath: "founder",
+        phoneVerified: phone.phoneVerified,
+        phoneMask: phone.phoneMask,
       });
       window.location.assign(routes.founder);
     } catch (err) {
-      const code = isApiError(err) ? err.code : "";
-      if (code === "already_member") {
+      const { code } = readApiRefusal(err);
+      if (refusalGoesToLogin(err)) {
         router.replace(routes.login);
         return;
       }
@@ -54,7 +57,7 @@ export function OriginsClaimForm() {
         router.replace(routes.origins);
         return;
       }
-      setError(mapOriginsError(code));
+      setError(refusalLine(err, mapOriginsError));
       setBusy(false);
     }
   }

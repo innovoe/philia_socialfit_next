@@ -16,6 +16,8 @@ export type FounderClaimKey = {
   already?: boolean;
   claim_deadline?: string | null;
   code?: string | null;
+  phone_verified?: boolean;
+  phone_mask?: string;
 };
 
 export function founderEmailStart(email: string) {
@@ -42,6 +44,14 @@ export function founderClaimKey(founderToken: string) {
   );
 }
 
+export function readClaimPhone(result: FounderClaimKey | null | undefined) {
+  const raw = result?.phone_verified as unknown;
+  return {
+    phoneVerified: raw === true || raw === 1 || raw === "true" || raw === "1",
+    phoneMask: typeof result?.phone_mask === "string" ? result.phone_mask : "",
+  };
+}
+
 export function mapOriginsError(code: string) {
   if (code === "invalid_email") return "Enter a valid email.";
   if (code === "unknown_email") return "This email isn’t on the First Wave list.";
@@ -60,7 +70,9 @@ export function mapOriginsError(code: string) {
   ) {
     return "Email verification expired — start again.";
   }
-  if (code === "already_member") return "You’re already on SocialFit — log in instead.";
+  if (code === "phone_taken") return "This number is already taken.";
+  if (code === "email_taken") return "This email is already taken.";
+  if (code === "already_member") return "You're already on SocialFit. Log in instead.";
   if (code === "key_expired") return "That Key window closed. Claim a Key again.";
   return "Could not continue — try again.";
 }

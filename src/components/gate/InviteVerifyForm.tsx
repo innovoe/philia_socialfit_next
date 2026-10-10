@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getMe } from "@/lib/api/member";
 import { isValidEmail } from "@/lib/api/origins";
-import { mapOtpError, sendOtp, verifyOtp } from "@/lib/api/otp";
+import { mapOtpError, readOtpSend, sendOtp, verifyOtp } from "@/lib/api/otp";
 import { normalizeUaePhone, sanitizeUaeLocalInput } from "@/lib/api/phone";
-import { isApiError } from "@/lib/api/errors";
+import { isApiError, readApiRefusal, refusalGoesToLogin, refusalLine } from "@/lib/api/errors";
 import { claimInviteKey, isInviteSession } from "@/lib/invite";
 import { hasAccess, readSession, writeSession } from "@/lib/session";
 import { clearStoryProgress } from "@/lib/story-answers";
@@ -25,10 +25,13 @@ export function InviteVerifyForm() {
   const [localPhone, setLocalPhone] = useState("");
   const [ageOk, setAgeOk] = useState(false);
   const [sent, setSent] = useState(false);
+  const [emailRequired, setEmailRequired] = useState(true);
+  const [phoneMask, setPhoneMask] = useState("");
   const [emailCode, setEmailCode] = useState("");
   const [phoneCode, setPhoneCode] = useState("");
   const [otpKey, setOtpKey] = useState(0);
   const [error, setError] = useState("");
+  const [offerLogin, setOfferLogin] = useState(false);
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
 
@@ -48,10 +51,23 @@ export function InviteVerifyForm() {
 
   const phone = normalizeUaePhone(`+971${localPhone}`);
   const canSend = isValidEmail(email) && !!phone && ageOk && !busy;
-  const canVerify = emailCode.length === 6 && phoneCode.length === 6 && !busy;
+  const canVerify = emailRequired
+    ? emailCode.length === 6 && phoneCode.length === 6 && !busy
+    : phoneCode.length === 6 && !busy;
 
   function onPhoneChange(value: string) {
     setLocalPhone(sanitizeUaeLocalInput(value));
+    setOfferLogin(false);
+  }
+
+  function showOtpRefusal(err: unknown, redirectOnLogin = false) {
+    if (redirectOnLogin && refusalGoesToLogin(err)) {
+      window.location.replace(routes.login);
+      return;
+    }
+    setError(refusalLine(err, mapOtpError));
+    setOfferLogin(readApiRefusal(err).next === "login");
+    setBusy(false);
   }
 
   async function onSend(e: React.FormEvent) {
@@ -66,43 +82,49 @@ export function InviteVerifyForm() {
       return;
     }
     setError("");
+    setOfferLogin(false);
     setBusy(true);
     try {
-      await sendOtp({
+      const result = await sendOtp({
         email: email.trim(),
         phone,
         key_id: s.keyId,
       });
+      const mode = readOtpSend(result);
       writeSession({ email: email.trim(), founderEmail: email.trim() });
+      setEmailRequired(mode.emailRequired);
+      setPhoneMask(mode.phoneMask);
       setSent(true);
       setBusy(false);
     } catch (err) {
-      const code = errorCode(err);
-      if (code === "key_expired") {
-        setError(mapOtpError(code));
-        setBusy(false);
-        return;
-      }
-      setError(mapOtpError(code));
-      setBusy(false);
+      showOtpRefusal(err);
     }
   }
 
   async function onVerify(e: React.FormEvent) {
     e.preventDefault();
     const s = readSession();
-    if (!phone || s.keyId == null || emailCode.length < 6 || phoneCode.length < 6) return;
+    if (!s.keyId || phoneCode.length < 6) return;
+    if (emailRequired && (emailCode.length < 6 || !phone)) return;
     setError("");
     setBusy(true);
     const nextEmail = email.trim();
     try {
-      const tokens = await verifyOtp({
-        email: nextEmail,
-        phone,
-        email_code: emailCode,
-        phone_code: phoneCode,
-        key_id: s.keyId,
-      });
+      const tokens = await verifyOtp(
+        emailRequired
+          ? {
+              email: nextEmail,
+              phone: phone!,
+              email_code: emailCode,
+              phone_code: phoneCode,
+              key_id: s.keyId,
+            }
+          : {
+              email: nextEmail,
+              phone_code: phoneCode,
+              key_id: s.keyId,
+            },
+      );
       clearStoryProgress();
       writeSession({
         access: tokens.access,
@@ -138,17 +160,11 @@ export function InviteVerifyForm() {
           window.location.assign(routes.verified);
           return;
         }
-        setError(mapOtpError(claimCode));
+        setError(refusalLine(err, mapOtpError));
         setBusy(false);
       }
     } catch (err) {
-      const code = errorCode(err);
-      if (code === "already_member") {
-        window.location.replace(routes.login);
-        return;
-      }
-      setError(mapOtpError(code));
-      setBusy(false);
+      showOtpRefusal(err, true);
     }
   }
 
@@ -161,15 +177,17 @@ export function InviteVerifyForm() {
     setPhoneCode("");
     setOtpKey((n) => n + 1);
     try {
-      await sendOtp({
+      const result = await sendOtp({
         email: email.trim(),
         phone,
         key_id: s.keyId,
       });
+      const mode = readOtpSend(result);
+      setEmailRequired(mode.emailRequired);
+      setPhoneMask(mode.phoneMask);
       setBusy(false);
     } catch (err) {
-      setError(mapOtpError(errorCode(err)));
-      setBusy(false);
+      showOtpRefusal(err);
     }
   }
 
@@ -206,6 +224,7 @@ export function InviteVerifyForm() {
                 onChange={(e) => {
                   setEmail(e.target.value);
                   setError("");
+                  setOfferLogin(false);
                 }}
               />
             </div>
@@ -234,6 +253,11 @@ export function InviteVerifyForm() {
           <p className="verify-error" style={{ opacity: error ? 1 : 0 }}>
             {error || " "}
           </p>
+          {offerLogin ? (
+            <Link href={routes.login} className="gate-text-link" style={{ marginTop: 0, marginBottom: 18 }}>
+              Log in instead
+            </Link>
+          ) : null}
           <label className="verify-age">
             <input
               type="checkbox"
@@ -268,26 +292,48 @@ export function InviteVerifyForm() {
         </form>
       ) : (
         <form onSubmit={onVerify}>
-          <h1 className="verify-head">
-            Check your
-            <br />
-            email and phone.
-          </h1>
-          <p className="verify-sub">Enter the codes we sent to confirm it&apos;s you.</p>
-          <div className="verify-otp">
-            <label className="verify-label">Email code</label>
-            <OtpInput key={`e-${otpKey}`} label="Email code" onChange={setEmailCode} disabled={busy} />
-          </div>
+          {emailRequired ? (
+            <>
+              <h1 className="verify-head">
+                Check your
+                <br />
+                email and phone.
+              </h1>
+              <p className="verify-sub">Enter the codes we sent to confirm it&apos;s you.</p>
+              <div className="verify-otp">
+                <label className="verify-label">Email code</label>
+                <OtpInput key={`e-${otpKey}`} label="Email code" onChange={setEmailCode} disabled={busy} />
+              </div>
+            </>
+          ) : (
+            <>
+              <h1 className="verify-head">
+                Check your
+                <br />
+                phone.
+              </h1>
+              <p className="verify-sub">
+                {phoneMask
+                  ? `Your verification code was sent to ${phoneMask}.`
+                  : "Your verification code was sent to the phone on your account."}
+              </p>
+            </>
+          )}
           <div className="verify-otp">
             <label className="verify-label">Phone code</label>
             <OtpInput key={`p-${otpKey}`} label="Phone code" onChange={setPhoneCode} disabled={busy} />
             <button className="verify-resend" type="button" onClick={onResend} disabled={busy}>
-              Resend codes
+              {emailRequired ? "Resend codes" : "Resend code"}
             </button>
           </div>
           <p className="verify-error" style={{ opacity: error ? 1 : 0 }}>
             {error || " "}
           </p>
+          {offerLogin ? (
+            <Link href={routes.login} className="gate-text-link" style={{ marginTop: 0, marginBottom: 10 }}>
+              Log in instead
+            </Link>
+          ) : null}
           <button
             className={`gate-cta gate-cta-primary${canVerify ? "" : " is-wait"}`}
             disabled={!canVerify}

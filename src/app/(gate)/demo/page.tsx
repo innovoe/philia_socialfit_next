@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { videos } from "@/lib/assets";
 import { canPlaySignalDemo } from "@/lib/signal-demo";
 import { routes } from "@/lib/routes";
-import { SocialFabric } from "@/components/gate/SocialFabric";
 
 export default function DemoPage() {
   useEffect(() => {
@@ -13,22 +13,40 @@ export default function DemoPage() {
   }, []);
 
   return (
-    <main className="demo-fabric screen active">
+    <main className="demo-home">
       <header className="demo-topbar">
         <span>Dubai</span>
         <span>Philia Life</span>
         <span>First Wave</span>
       </header>
-      <SocialFabric />
-      <section className="demo-fabric-bottom">
+      <section className="demo-video">
+        <video autoPlay muted loop playsInline preload="auto">
+          <source src={videos.imageStretch} type="video/mp4" />
+        </video>
+        <div className="demo-chip">
+          <i />
+          <span>SocialFit</span>
+        </div>
+      </section>
+      <section className="demo-copy">
+        <h1>
+          Make a city
+          <br />
+          feel like home.
+        </h1>
+        <p>Serendipity, by design.</p>
+        <div className="demo-line" />
+      </section>
+      <section className="demo-bottom">
         <button
           className="gate-cta gate-cta-primary"
           type="button"
-          onClick={() => window.location.assign(routes.demoEnter)}
+          onClick={() => window.location.assign(routes.demoIntro)}
         >
-          <span>Continue</span>
+          <span>Enter SocialFit Demo</span>
           <span>→</span>
         </button>
+        <div className="gate-micro">Connection has a new language</div>
       </section>
     </main>
   );
