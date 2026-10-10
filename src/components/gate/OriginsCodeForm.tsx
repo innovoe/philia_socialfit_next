@@ -74,7 +74,7 @@ export function OriginsCodeForm() {
   if (!open) return <SessionHold />;
 
   return (
-    <GateChrome>
+    <GateChrome
       copy={
         <>
           Enter the code we sent

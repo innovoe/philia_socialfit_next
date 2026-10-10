@@ -71,7 +71,7 @@ export function OriginsClaimForm() {
   if (!open) return <SessionHold />;
 
   return (
-    <GateChrome>
+    <GateChrome
       copy={
         <>
           SocialFit is invite-only.

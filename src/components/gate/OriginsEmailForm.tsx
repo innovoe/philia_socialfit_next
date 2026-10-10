@@ -86,7 +86,7 @@ export function OriginsEmailForm() {
   if (!open) return <SessionHold />;
 
   return (
-    <GateChrome>
+    <GateChrome
       replay
       headline={"A private layer\nfor the city."}
       copy={
