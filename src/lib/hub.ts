@@ -3,16 +3,15 @@
 import { getMe, patchCeremony } from "@/lib/api/member";
 import { isApiError } from "@/lib/api/errors";
 import { persistCeremonyStep } from "@/lib/ceremony";
+import { clearLiveSession } from "@/lib/live-session";
 import { routes } from "@/lib/routes";
 import {
   applyMeToSession,
-  clearSession,
   hasAccess,
   readSession,
   writeSession,
   type MembershipChoice,
 } from "@/lib/session";
-import { clearStoryProgress } from "@/lib/story-answers";
 import type { OutboundKey } from "@/lib/api/keys";
 import { outboundClockMs, parseDeadline } from "@/lib/api/keys";
 import type { Me, Mirror } from "@/lib/api/member";
@@ -233,14 +232,7 @@ export function isHubReady(me?: Me | null) {
 }
 
 export function goLogout() {
-  clearStoryProgress();
-  try {
-    localStorage.removeItem("philia_ceremony_step");
-    localStorage.removeItem("philia_id_theme");
-  } catch {
-    /* private mode */
-  }
-  clearSession();
+  clearLiveSession();
   window.location.assign(routes.landing);
 }
 

@@ -7,9 +7,11 @@ import {
   mapOriginsError,
 } from "@/lib/api/origins";
 import { isApiError } from "@/lib/api/errors";
+import { bounceIfLiveSession } from "@/lib/live-session";
 import { hasEmailStarted, readSession, writeSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { GateChrome } from "@/components/gate/GateChrome";
+import { SessionHold } from "@/components/gate/SessionHold";
 import { OtpInput } from "@/components/gate/OtpInput";
 import Link from "next/link";
 
@@ -19,13 +21,16 @@ export function OriginsCodeForm() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [email, setEmail] = useState("");
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    if (bounceIfLiveSession()) return;
     if (!hasEmailStarted()) {
       window.location.replace(routes.origins);
       return;
     }
     setEmail(readSession().founderEmail || "");
+    setOpen(true);
   }, [router]);
 
   const ready = code.length === 6 && !busy;
@@ -66,8 +71,10 @@ export function OriginsCodeForm() {
     }
   }
 
+  if (!open) return <SessionHold />;
+
   return (
-    <GateChrome
+    <GateChrome>
       copy={
         <>
           Enter the code we sent

@@ -5,17 +5,15 @@ import { KeysNominate } from "@/components/gate/KeysNominate";
 import { videos } from "@/lib/assets";
 import { getMe, patchCeremony } from "@/lib/api/member";
 import { persistCeremonyStep } from "@/lib/ceremony";
-import { applyMeToSession, hasAccess, readSession, writeSession } from "@/lib/session";
+import { isSessionExpiring, requireMemberAccess } from "@/lib/expire";
+import { applyMeToSession, readSession, writeSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 
 export default function CeremonyKeysPage() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!hasAccess()) {
-      window.location.replace(routes.verify);
-      return;
-    }
+    if (!requireMemberAccess()) return;
 
     async function boot() {
       writeSession({ explorerReady: true, hubUnlocked: false });
@@ -33,11 +31,13 @@ export default function CeremonyKeysPage() {
           persistCeremonyStep("keys");
         }
       } catch {
+        if (isSessionExpiring()) return;
         if (!readSession().explorerReady) {
           window.location.replace(routes.ceremony);
           return;
         }
       }
+      if (isSessionExpiring()) return;
       setReady(true);
     }
 

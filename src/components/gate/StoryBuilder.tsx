@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { videos } from "@/lib/assets";
-import { hasAccess } from "@/lib/session";
+import { isSessionExpiring, requireMemberAccess } from "@/lib/expire";
 import { routes } from "@/lib/routes";
 import {
   READ_SECTIONS,
@@ -118,13 +118,11 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
   const sec = sections[index];
 
   useEffect(() => {
-    if (!hasAccess()) {
-      window.location.replace(routes.verify);
-      return;
-    }
+    if (!requireMemberAccess()) return;
     let cancelled = false;
-    hydrateAnswersFromServer().then((next) => {
-      if (cancelled) return;
+    hydrateAnswersFromServer()
+      .then((next) => {
+      if (cancelled || isSessionExpiring()) return;
       setAnswers(next);
       if (hydrated.current) {
         setReady(true);
@@ -153,7 +151,10 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
         }
       }
       setReady(true);
-    });
+      })
+      .catch(() => {
+        /* dead session is leaving */
+      });
     return () => {
       cancelled = true;
     };
@@ -458,10 +459,7 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
 export function StoryResume({ mode }: { mode: "story" | "read" }) {
   const router = useRouter();
   useEffect(() => {
-    if (!hasAccess()) {
-      window.location.replace(routes.verify);
-      return;
-    }
+    if (!requireMemberAccess()) return;
     const answers = loadAnswers();
     const target = computeResume(answers);
     if (mode === "story" && target.kind === "story") {

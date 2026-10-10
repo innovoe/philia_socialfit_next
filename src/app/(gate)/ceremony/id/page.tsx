@@ -13,7 +13,8 @@ import {
   type PassportTheme,
   type PassportView,
 } from "@/lib/ceremony";
-import { applyMeToSession, hasAccess, normalizeCeremonyStep, readSession, writeSession } from "@/lib/session";
+import { isSessionExpiring, requireMemberAccess } from "@/lib/expire";
+import { applyMeToSession, normalizeCeremonyStep, readSession, writeSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 
 export default function CeremonyIdPage() {
@@ -24,10 +25,7 @@ export default function CeremonyIdPage() {
   const [claimLabel, setClaimLabel] = useState("CLAIM ICE CARD");
 
   useEffect(() => {
-    if (!hasAccess()) {
-      window.location.replace(routes.verify);
-      return;
-    }
+    if (!requireMemberAccess()) return;
 
     async function boot() {
       try {
@@ -42,6 +40,7 @@ export default function CeremonyIdPage() {
         if (step) persistCeremonyStep(step);
         writeSession({ explorerReady: true, hubUnlocked: step === "hub" });
       } catch {
+        if (isSessionExpiring()) return;
         if (!readSession().explorerReady) {
           window.location.replace(routes.ceremony);
           return;
@@ -55,6 +54,7 @@ export default function CeremonyIdPage() {
         setView(next);
         setClaimLabel(`CLAIM ${THEME_LABELS[next.theme]} CARD`);
       } catch {
+        if (isSessionExpiring()) return;
         setView(passportView());
       }
     }

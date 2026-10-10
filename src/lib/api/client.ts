@@ -1,6 +1,7 @@
 import { env } from "@/lib/env";
 import { ApiError } from "@/lib/api/errors";
 import type { ApiBase, Endpoint } from "@/lib/api/endpoints";
+import { expireDeadSession, isDeadAccessError } from "@/lib/expire";
 import { readSession } from "@/lib/session";
 
 function baseUrl(base: ApiBase) {
@@ -54,7 +55,9 @@ export async function apiRequest<T, Args extends unknown[] = []>(
 
   const data = await parseBody(res);
   if (!res.ok) {
-    throw new ApiError(res.status, data, `http_${res.status}`);
+    const err = new ApiError(res.status, data, `http_${res.status}`);
+    if (needAuth && isDeadAccessError(err)) expireDeadSession();
+    throw err;
   }
   return data as T;
 }
@@ -84,7 +87,9 @@ export async function apiFormRequest<T, Args extends unknown[] = []>(
 
   const data = await parseBody(res);
   if (!res.ok) {
-    throw new ApiError(res.status, data, `http_${res.status}`);
+    const err = new ApiError(res.status, data, `http_${res.status}`);
+    if (needAuth && isDeadAccessError(err)) expireDeadSession();
+    throw err;
   }
   return data as T;
 }

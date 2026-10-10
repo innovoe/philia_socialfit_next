@@ -4,12 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { founderEmailStart, isValidEmail, mapOriginsError } from "@/lib/api/origins";
 import { readApiRefusal, refusalGoesToLogin, refusalLine } from "@/lib/api/errors";
+import { bounceIfLiveSession } from "@/lib/live-session";
 import { readSession, writeSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { GateChrome } from "@/components/gate/GateChrome";
+import { SessionHold } from "@/components/gate/SessionHold";
 
 export function OriginsEmailForm() {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -17,6 +20,7 @@ export function OriginsEmailForm() {
   const emailRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    if (bounceIfLiveSession()) return;
     const params = new URLSearchParams(window.location.search);
     const token = (params.get("founder_token") || params.get("ft") || "").trim();
     const fromUrl = (params.get("email") || "").trim();
@@ -32,6 +36,7 @@ export function OriginsEmailForm() {
     }
     const saved = fromUrl || readSession().founderEmail;
     if (saved) setEmail(saved);
+    setOpen(true);
     const id = window.setTimeout(() => {
       const filled = emailRef.current?.value?.trim() || "";
       if (filled) setEmail(filled);
@@ -78,8 +83,10 @@ export function OriginsEmailForm() {
     }
   }
 
+  if (!open) return <SessionHold />;
+
   return (
-    <GateChrome
+    <GateChrome>
       replay
       headline={"A private layer\nfor the city."}
       copy={

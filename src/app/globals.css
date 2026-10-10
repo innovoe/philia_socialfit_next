@@ -1904,6 +1904,23 @@ body {
   margin: 0 0 40px;
 }
 
+.logged-in-wrap {
+  justify-content: center;
+}
+
+.logged-in-kicker {
+  font-family: var(--font-montserrat), sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+  color: rgba(79, 90, 114, 0.62);
+  margin: 0 0 10px;
+}
+
+.logged-in-name {
+  margin-bottom: 22px;
+}
+
 .verify-fields {
   display: flex;
   flex-direction: column;

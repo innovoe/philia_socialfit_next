@@ -4,19 +4,25 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { founderClaimKey, mapOriginsError, readClaimPhone } from "@/lib/api/origins";
 import { readApiRefusal, refusalGoesToLogin, refusalLine } from "@/lib/api/errors";
+import { bounceIfLiveSession } from "@/lib/live-session";
 import { hasFounderToken, readSession, writeSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { GateChrome } from "@/components/gate/GateChrome";
+import { SessionHold } from "@/components/gate/SessionHold";
 
 export function OriginsClaimForm() {
   const router = useRouter();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    if (bounceIfLiveSession()) return;
     if (!hasFounderToken()) {
       window.location.replace(routes.origins);
+      return;
     }
+    setOpen(true);
   }, [router]);
 
   async function onSubmit(e: React.FormEvent) {
@@ -62,8 +68,10 @@ export function OriginsClaimForm() {
     }
   }
 
+  if (!open) return <SessionHold />;
+
   return (
-    <GateChrome
+    <GateChrome>
       copy={
         <>
           SocialFit is invite-only.

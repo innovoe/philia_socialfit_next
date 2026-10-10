@@ -18,6 +18,7 @@ import {
   type OutboundKey,
 } from "@/lib/api/keys";
 import { isApiError } from "@/lib/api/errors";
+import { isSessionExpiring } from "@/lib/expire";
 import {
   canOfferExtraKeyRequest,
   countSentKeys,
@@ -178,6 +179,7 @@ export function HubScreen({ initialTab = 1 }: { initialTab?: 1 | 2 | 3 }) {
         getMirror().catch(() => null),
         getMe().catch(() => null),
       ]);
+      if (isSessionExpiring()) return;
       if (nextMe) {
         applyMeToSession(nextMe);
         setMe(nextMe);

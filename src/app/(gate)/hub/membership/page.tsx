@@ -3,18 +3,15 @@
 import { useEffect, useState } from "react";
 import { getMe } from "@/lib/api/member";
 import { goHub, goLogout, membershipPackageLabel, membershipPackagePrice } from "@/lib/hub";
-import { applyMeToSession, hasAccess, readSession, writeSession, type MembershipChoice } from "@/lib/session";
-import { routes } from "@/lib/routes";
+import { isSessionExpiring, requireMemberAccess } from "@/lib/expire";
+import { applyMeToSession, readSession, writeSession, type MembershipChoice } from "@/lib/session";
 
 export default function HubMembershipPage() {
   const [choice, setChoice] = useState<MembershipChoice | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!hasAccess()) {
-      window.location.replace(routes.verify);
-      return;
-    }
+    if (!requireMemberAccess()) return;
 
     async function boot() {
       const local = readSession().membershipChoice;
@@ -30,12 +27,14 @@ export default function HubMembershipPage() {
         writeSession({ membershipChoice: next });
         setChoice(next);
       } catch {
+        if (isSessionExpiring()) return;
         if (!local) {
           await goHub({ tab: 3 });
           return;
         }
         setChoice(local);
       }
+      if (isSessionExpiring()) return;
       setReady(true);
     }
 

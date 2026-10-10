@@ -17,6 +17,7 @@ import { ProfileIdentity } from "@/components/gate/ProfileIdentity";
 import { emitWorldsBadge, memberInitials, PROFILE_WORLDS, profileTierLine, type WorldId } from "@/lib/profile";
 import { patchMeError } from "@/lib/identity";
 import { startSignalReplay } from "@/lib/signal-demo";
+import { isSessionExpiring } from "@/lib/expire";
 import { applyMeToSession, readSession } from "@/lib/session";
 import { emptyWorlds } from "@/lib/worlds";
 import { routes } from "@/lib/routes";
@@ -136,8 +137,10 @@ export function ProfileScreen() {
         applyIdentity(next);
         setTierLine(profileTierLine());
       } catch {
+        if (isSessionExpiring()) return;
         setName(memberDisplayName());
       }
+      if (isSessionExpiring()) return;
       try {
         const p = await getPassport();
         applyPassportToSession(p);

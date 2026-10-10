@@ -2,9 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { videos } from "@/lib/assets";
-import { hasAccess, readSession } from "@/lib/session";
+import { getMe } from "@/lib/api/member";
+import { isSessionExpiring, requireMemberAccess } from "@/lib/expire";
+import { applyMeToSession, readSession } from "@/lib/session";
 import { isInviteSession } from "@/lib/invite";
 import { routes } from "@/lib/routes";
+import { SessionHold } from "@/components/gate/SessionHold";
 
 function formatWindow(iso: string | null) {
   if (!iso) return null;
@@ -20,20 +23,37 @@ export default function VerifiedPage() {
   const [deadline, setDeadline] = useState<string | null>(null);
   const [now, setNow] = useState(0);
   const [invite, setInvite] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!hasAccess()) {
-      window.location.replace(routes.verify);
-      return;
-    }
-    const s = readSession();
-    setInvite(isInviteSession());
-    setDeadline(s.finishDeadline || s.claimDeadline);
+    if (!requireMemberAccess()) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const me = await getMe();
+        if (cancelled) return;
+        applyMeToSession(me);
+      } catch {
+        if (isSessionExpiring()) return;
+      }
+      if (cancelled || isSessionExpiring()) return;
+      const s = readSession();
+      setInvite(isInviteSession());
+      setDeadline(s.finishDeadline || s.claimDeadline);
+      setReady(true);
+    })();
+
     const id = window.setInterval(() => setNow(Date.now()), 30000);
-    return () => window.clearInterval(id);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
   }, []);
 
   const windowLabel = useMemo(() => formatWindow(deadline), [deadline, now]);
+
+  if (!ready) return <SessionHold />;
 
   return (
     <main className="verified-wrap">

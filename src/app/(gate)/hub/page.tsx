@@ -5,7 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { HubScreen } from "@/components/gate/HubScreen";
 import { getMe } from "@/lib/api/member";
 import { goHub } from "@/lib/hub";
-import { applyMeToSession, hasAccess, normalizeCeremonyStep, readSession } from "@/lib/session";
+import { isSessionExpiring, requireMemberAccess } from "@/lib/expire";
+import { applyMeToSession, normalizeCeremonyStep, readSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 
 function HubInner() {
@@ -15,10 +16,7 @@ function HubInner() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!hasAccess()) {
-      window.location.replace(routes.verify);
-      return;
-    }
+    if (!requireMemberAccess()) return;
 
     async function boot() {
       const s = readSession();
@@ -38,12 +36,14 @@ function HubInner() {
         }
         await goHub({ assign: false });
       } catch {
+        if (isSessionExpiring()) return;
         if (!(s.hubUnlocked || s.ceremonyStep === "hub" || s.explorerReady)) {
           window.location.replace(routes.ceremony);
           return;
         }
         await goHub({ assign: false });
       }
+      if (isSessionExpiring()) return;
       setReady(true);
     }
 

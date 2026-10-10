@@ -10,7 +10,8 @@ import {
   handleActivateError,
   persistCeremonyStep,
 } from "@/lib/ceremony";
-import { applyMeToSession, hasAccess, normalizeCeremonyStep, writeSession } from "@/lib/session";
+import { isSessionExpiring, requireMemberAccess } from "@/lib/expire";
+import { applyMeToSession, normalizeCeremonyStep, writeSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { firstIncomplete, leadCap, STORY_SECTIONS, type StoryAnswers } from "@/lib/story-data";
 import { hydrateAnswersFromServer } from "@/lib/story-answers";
@@ -21,31 +22,33 @@ export default function CeremonySummaryPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!hasAccess()) {
-      window.location.replace(routes.verify);
-      return;
-    }
-    hydrateAnswersFromServer().then(async (next) => {
-      const late = firstIncomplete(STORY_SECTIONS, next, 3);
-      if (late != null) {
-        window.location.replace(`${routes.story}/${late + 1}`);
-        return;
-      }
-      try {
-        const me = await getMe();
-        applyMeToSession(me);
-        const step = normalizeCeremonyStep(me.ceremony_step);
-        if (step === "id" || step === "keys" || step === "hub") {
-          persistCeremonyStep(step);
-          writeSession({ explorerReady: true, hubUnlocked: step === "hub" });
-          window.location.replace(ceremonyUrlForStep(step));
+    if (!requireMemberAccess()) return;
+    hydrateAnswersFromServer()
+      .then(async (next) => {
+        if (isSessionExpiring()) return;
+        const late = firstIncomplete(STORY_SECTIONS, next, 3);
+        if (late != null) {
+          window.location.replace(`${routes.story}/${late + 1}`);
           return;
         }
-      } catch {
-        /* stay on summary */
-      }
-      setAnswers(next);
-    });
+        try {
+          const me = await getMe();
+          applyMeToSession(me);
+          const step = normalizeCeremonyStep(me.ceremony_step);
+          if (step === "id" || step === "keys" || step === "hub") {
+            persistCeremonyStep(step);
+            writeSession({ explorerReady: true, hubUnlocked: step === "hub" });
+            window.location.replace(ceremonyUrlForStep(step));
+            return;
+          }
+        } catch {
+          if (isSessionExpiring()) return;
+        }
+        setAnswers(next);
+      })
+      .catch(() => {
+        /* dead session is leaving */
+      });
   }, []);
 
   async function onContinue() {

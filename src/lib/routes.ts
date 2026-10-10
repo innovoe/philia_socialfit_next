@@ -2,6 +2,7 @@ export const routes = {
   landing: "/",
   unlock: "/unlock",
   login: "/login",
+  loggedIn: "/logged-in",
   origins: "/origins",
   originsCode: "/origins/code",
   originsClaim: "/origins/claim",

@@ -5,17 +5,22 @@ import Link from "next/link";
 import { videos } from "@/lib/assets";
 import { isInvitePayload, validateKeyCode } from "@/lib/api/key-entry";
 import { normaliseKeyCode, stashKeyValidate } from "@/lib/invite";
+import { bounceIfLiveSession } from "@/lib/live-session";
 import { readSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
+import { SessionHold } from "@/components/gate/SessionHold";
 
 export function UnlockForm() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    if (bounceIfLiveSession({ onlyIfClaimed: true })) return;
     const s = readSession();
     if (s.keyCode) setCode(s.keyCode);
+    setOpen(true);
   }, []);
 
   const ready = normaliseKeyCode(code).length >= 4 && !busy;
@@ -47,6 +52,8 @@ export function UnlockForm() {
       setBusy(false);
     }
   }
+
+  if (!open) return <SessionHold />;
 
   return (
     <main className="gate-wrap">

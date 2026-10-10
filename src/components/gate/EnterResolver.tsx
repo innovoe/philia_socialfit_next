@@ -1,17 +1,21 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { parseEntrySearch, shouldSkip } from "@/lib/entry";
+import { bounceIfLiveSession } from "@/lib/live-session";
 import { writeSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
+import { SessionHold } from "@/components/gate/SessionHold";
 
 export function EnterResolver() {
   const search = useSearchParams();
   const flags = useMemo(() => parseEntrySearch(search.toString()), [search]);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    if (bounceIfLiveSession()) return;
     writeSession({
       entryPath: "consumer",
       skip: flags.skip,
@@ -22,11 +26,14 @@ export function EnterResolver() {
       founderEmail: flags.email,
       emailStarted: !!flags.email,
     });
+    setOpen(true);
   }, [flags]);
 
   const skipDemo = shouldSkip(flags.skip, "demo");
   const skipEmail = shouldSkip(flags.skip, "email");
   const bypass = !!flags.access;
+
+  if (!open) return <SessionHold />;
 
   return (
     <main className="gate-wrap">

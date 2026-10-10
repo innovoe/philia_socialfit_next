@@ -12,6 +12,7 @@ import {
   type NameVisibility,
   type ShareAudience,
 } from "@/lib/api/member";
+import { isSessionExpiring } from "@/lib/expire";
 import {
   applyPassportToSession,
   getSavedIdTheme,
@@ -75,8 +76,9 @@ export function IdManageScreen() {
         identity = await getMe();
         applyMe(identity);
       } catch {
-        /* session */
+        if (isSessionExpiring()) return;
       }
+      if (isSessionExpiring()) return;
       try {
         const passport = await getPassport();
         applyPassportToSession(passport, identity || undefined);

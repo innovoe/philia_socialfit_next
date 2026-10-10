@@ -13,11 +13,13 @@ import {
 } from "@/lib/api/otp";
 import { normalizeUaePhone, sanitizeUaeLocalInput } from "@/lib/api/phone";
 import { isApiError, refusalLine } from "@/lib/api/errors";
-import { hasAccess, readSession, writeSession } from "@/lib/session";
+import { bounceIfLiveSession } from "@/lib/live-session";
+import { readSession, writeSession } from "@/lib/session";
 import { resumeMember } from "@/lib/resume";
 import { clearStoryProgress } from "@/lib/story-answers";
 import { routes } from "@/lib/routes";
 import { OtpInput } from "@/components/gate/OtpInput";
+import { SessionHold } from "@/components/gate/SessionHold";
 
 function errorCode(err: unknown) {
   if (isApiError(err)) return err.code;
@@ -44,24 +46,8 @@ export function LoginForm() {
     const saved = readSession().founderEmail || readSession().email || "";
     setEmail(saved);
 
-    if (!hasAccess()) {
-      setReady(true);
-      return;
-    }
-
-    let cancelled = false;
-    (async () => {
-      try {
-        const me = await getMe();
-        if (!cancelled) await resumeMember(me);
-      } catch {
-        writeSession({ access: null, refresh: null });
-        if (!cancelled) setReady(true);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+    if (bounceIfLiveSession()) return;
+    setReady(true);
   }, []);
 
   const phone = normalizeUaePhone(`+971${localPhone}`);
@@ -174,7 +160,7 @@ export function LoginForm() {
     }
   }
 
-  if (!ready) return null;
+  if (!ready) return <SessionHold />;
 
   return (
     <main className="verify-wrap">

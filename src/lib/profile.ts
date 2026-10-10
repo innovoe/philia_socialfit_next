@@ -1,7 +1,8 @@
 "use client";
 
 import { memberDisplayName } from "@/lib/ceremony";
-import { hasAccess, readSession } from "@/lib/session";
+import { requireMemberAccess } from "@/lib/expire";
+import { readSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { worldsFilledCount, type WorldId } from "@/lib/worlds";
 
@@ -54,10 +55,7 @@ export function profileDisplayName() {
 }
 
 export function requireProfileAccess() {
-  if (!hasAccess()) {
-    window.location.replace(routes.verify);
-    return false;
-  }
+  if (!requireMemberAccess()) return false;
   const s = readSession();
   const explorer =
     s.explorerReady ||

@@ -9,7 +9,8 @@ import {
   passportView,
   type PassportView,
 } from "@/lib/ceremony";
-import { applyMeToSession, hasAccess, readSession, writeSession } from "@/lib/session";
+import { isSessionExpiring, requireMemberAccess } from "@/lib/expire";
+import { applyMeToSession, readSession, writeSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 
 export default function CeremonyMirrorPage() {
@@ -17,10 +18,7 @@ export default function CeremonyMirrorPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!hasAccess()) {
-      window.location.replace(routes.verify);
-      return;
-    }
+    if (!requireMemberAccess()) return;
     if (!readSession().explorerReady) {
       window.location.replace(routes.ceremony);
       return;
@@ -32,13 +30,14 @@ export default function CeremonyMirrorPage() {
         applyMeToSession(me);
         writeSession({ explorerReady: true });
       } catch {
-        /* session already explorer */
+        if (isSessionExpiring()) return;
       }
       try {
         const passport = await getPassport();
         applyPassportToSession(passport);
         setView(passportView(undefined, passport));
       } catch {
+        if (isSessionExpiring()) return;
         setView(passportView());
       }
     }

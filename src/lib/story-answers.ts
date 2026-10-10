@@ -1,6 +1,7 @@
 "use client";
 
 import { saveStoryRead, getStoryRead } from "@/lib/api/story";
+import { isDeadAccessError } from "@/lib/expire";
 import { hasAccess, readSession } from "@/lib/session";
 import {
   READ_KEYS,
@@ -54,7 +55,8 @@ export function persistAnswers(answers: StoryAnswers) {
   READ_KEYS.forEach((k) => {
     if (answers[k] != null) read_blanks[k] = answers[k] as StoryAnswer;
   });
-  saveStoryRead({ story_blanks, read_blanks }).catch(() => {
+  saveStoryRead({ story_blanks, read_blanks }).catch((err) => {
+    if (isDeadAccessError(err)) return;
     const note = document.getElementById("storySaveNote") ?? document.createElement("div");
     note.id = "storySaveNote";
     note.textContent = "Couldn’t sync answers — saved on this device only.";
@@ -79,7 +81,8 @@ export async function hydrateAnswersFromServer() {
       writeAnswers(next);
       serverHydrated = true;
       return next;
-    } catch {
+    } catch (err) {
+      if (isDeadAccessError(err)) throw err;
       serverHydrated = true;
       return loadAnswers();
     } finally {
