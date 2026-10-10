@@ -89,6 +89,9 @@ export type Me = {
   user_id?: number | null;
   waitlisted?: boolean;
   entry_path?: string | null;
+  keys_to_the_city?: boolean;
+  verified_email?: string | null;
+  verified_mobile?: string | null;
   membership_choice?: MembershipChoice | null;
 };
 
@@ -134,6 +137,10 @@ function asNum(v: unknown) {
   if (v == null || v === "") return null;
   const n = typeof v === "number" ? v : Number(v);
   return Number.isFinite(n) ? n : null;
+}
+
+function asFlag(v: unknown) {
+  return v === true || v === 1 || v === "true" || v === "1";
 }
 
 function pick(raw: Record<string, unknown>, profile: Record<string, unknown>, key: string) {
@@ -190,6 +197,9 @@ export function normalizeMe(raw: MeRaw | null | undefined): Me | null {
       raw.finish_deadline != null ? raw.finish_deadline : profile.finish_deadline,
     ),
     entry_path: raw.entry_path || asStr(profile.entry_path) || null,
+    keys_to_the_city: asFlag(raw.keys_to_the_city ?? profile.keys_to_the_city),
+    verified_email: asStr(raw.verified_email ?? profile.verified_email),
+    verified_mobile: asStr(raw.verified_mobile ?? profile.verified_mobile),
     story_complete: !!raw.story_complete,
     read_complete: !!raw.read_complete,
     display_name,
@@ -226,6 +236,10 @@ export function normalizeMe(raw: MeRaw | null | undefined): Me | null {
   };
   if (out.ceremony_step === "hub" || out.onboarding_step === "done") out.needs_onboarding = false;
   return out;
+}
+
+export function contactsAlreadyVerified(me?: Me | null) {
+  return !!(me?.verified_email && me?.verified_mobile);
 }
 
 export function claimKey(

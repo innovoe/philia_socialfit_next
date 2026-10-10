@@ -38,6 +38,13 @@ export function sanitizeUaeLocalInput(raw: string) {
   return d.slice(0, 9);
 }
 
+/** +971501234555 → +97150****555 */
+export function maskPhone(raw: string | null | undefined) {
+  const d = String(raw || "").replace(/\s/g, "");
+  if (d.length < 10) return d;
+  return `${d.slice(0, 6)}****${d.slice(-3)}`;
+}
+
 /** Ceremony Keys contact field — emails pass through, phones are digit-only. */
 export function sanitizeContactField(raw: string) {
   const s = String(raw || "");

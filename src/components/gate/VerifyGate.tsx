@@ -6,15 +6,12 @@ import { VerifyForm } from "@/components/gate/VerifyForm";
 import { isInviteSession } from "@/lib/invite";
 import { hasAccess, hasFounderKey, readSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
+import { SessionHold } from "@/components/gate/SessionHold";
 
 export function VerifyGate() {
   const [mode, setMode] = useState<"founder" | "invite" | null>(null);
 
   useEffect(() => {
-    if (hasAccess()) {
-      window.location.replace(routes.verified);
-      return;
-    }
     const s = readSession();
     if (hasFounderKey()) {
       setMode("founder");
@@ -24,10 +21,18 @@ export function VerifyGate() {
       setMode("invite");
       return;
     }
+    if (hasAccess() && s.keyId != null) {
+      setMode("founder");
+      return;
+    }
+    if (hasAccess()) {
+      window.location.replace(routes.verified);
+      return;
+    }
     window.location.replace(routes.origins);
   }, []);
 
   if (mode === "invite") return <InviteVerifyForm />;
   if (mode === "founder") return <VerifyForm />;
-  return null;
+  return <SessionHold />;
 }

@@ -1,5 +1,6 @@
 import { apiRequest } from "@/lib/api/client";
 import { publicEndpoints } from "@/lib/api/endpoints";
+import { hasAccess } from "@/lib/session";
 
 export type FounderEmailStart = { ok?: boolean; sent?: boolean };
 
@@ -36,11 +37,14 @@ export function founderEmailVerify(email: string, code: string) {
   );
 }
 
-export function founderClaimKey(founderToken: string) {
+export function founderClaimKey(founderToken?: string | null) {
+  const body: Record<string, string> = {};
+  if (founderToken) body.founder_token = founderToken;
   return apiRequest<FounderClaimKey, []>(
     publicEndpoints.founderClaimKey,
     [],
-    { founder_token: founderToken },
+    body,
+    hasAccess() ? { auth: true } : {},
   );
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { maskPhone } from "@/lib/api/phone";
 import { worldsFilledCount, type WorldId } from "@/lib/worlds";
 
 export type EntryPath = "founder" | "invite" | "consumer" | null;
@@ -44,6 +45,7 @@ export type GateSession = {
   keyType: string | null;
   phoneVerified: boolean;
   phoneMask: string | null;
+  keysToTheCity: boolean;
 };
 
 const KEY = "philia_gate";
@@ -81,6 +83,7 @@ const empty: GateSession = {
   keyType: null,
   phoneVerified: false,
   phoneMask: null,
+  keysToTheCity: false,
 };
 
 function canUseStorage() {
@@ -157,6 +160,9 @@ export function applyMeToSession(me: {
   claim_deadline?: string | null;
   user_id?: number | null;
   has_claimed_key?: boolean | null;
+  keys_to_the_city?: boolean;
+  verified_email?: string | null;
+  verified_mobile?: string | null;
   needs_onboarding?: boolean;
   membership_choice?: MembershipChoice | null;
   worlds?: Record<string, string[]>;
@@ -172,12 +178,19 @@ export function applyMeToSession(me: {
     displayName: me.display_name != null ? me.display_name || null : readSession().displayName,
     firstName: me.first_name != null ? me.first_name || null : readSession().firstName,
     lastName: me.last_name != null ? me.last_name || null : readSession().lastName,
-    email: me.email || readSession().email,
+    email: me.verified_email || me.email || readSession().email,
+    phoneVerified: me.verified_mobile ? true : readSession().phoneVerified,
+    phoneMask: me.verified_mobile
+      ? me.verified_mobile.includes("*")
+        ? me.verified_mobile
+        : maskPhone(me.verified_mobile)
+      : readSession().phoneMask,
     passportDisplay: me.passport_display || readSession().passportDisplay,
     tier: me.tier || readSession().tier,
     finishDeadline: me.finish_deadline ?? readSession().finishDeadline,
     claimDeadline: me.claim_deadline ?? readSession().claimDeadline,
     userId: me.user_id ?? readSession().userId,
+    keysToTheCity: me.keys_to_the_city ?? readSession().keysToTheCity,
     membershipChoice: me.membership_choice ?? readSession().membershipChoice,
     worldsFilled: me.worlds
       ? worldsFilledCount(me.worlds as Record<WorldId, string[]>)

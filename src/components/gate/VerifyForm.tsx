@@ -5,16 +5,19 @@ import Link from "next/link";
 import { claimKey, getMe } from "@/lib/api/member";
 import { founderClaimKey, readClaimPhone } from "@/lib/api/origins";
 import { mapOtpError, readOtpSend, sendOtp, verifyOtp } from "@/lib/api/otp";
-import { normalizeUaePhone, sanitizeUaeLocalInput } from "@/lib/api/phone";
+import { maskPhone, normalizeUaePhone, sanitizeUaeLocalInput } from "@/lib/api/phone";
 import { isApiError, readApiRefusal, refusalGoesToLogin, refusalLine } from "@/lib/api/errors";
 import {
+  applyMeToSession,
   hasAccess,
   hasFounderKey,
   readSession,
   writeSession,
 } from "@/lib/session";
+import { resumeMember } from "@/lib/resume";
 import { routes } from "@/lib/routes";
 import { OtpInput } from "@/components/gate/OtpInput";
+import { SessionHold } from "@/components/gate/SessionHold";
 
 function errorCode(err: unknown) {
   if (isApiError(err)) return err.code;
@@ -34,24 +37,47 @@ export function VerifyForm() {
   const [offerLogin, setOfferLogin] = useState(false);
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
+  const [returning, setReturning] = useState(false);
 
   useEffect(() => {
-    if (hasAccess()) {
-      window.location.replace(routes.verified);
-      return;
-    }
-    if (!hasFounderKey()) {
+    if (!hasAccess() && !hasFounderKey()) {
       window.location.replace(routes.origins);
       return;
     }
 
     let cancelled = false;
     const s = readSession();
-    setEmail(s.founderEmail || "");
+    setEmail(s.founderEmail || s.email || "");
     setPhoneVerified(s.phoneVerified === true);
     setPhoneMask(s.phoneMask || "");
 
     (async () => {
+      if (hasAccess()) {
+        setReturning(true);
+        try {
+          const me = await getMe();
+          if (cancelled) return;
+          applyMeToSession(me);
+          const mail = me.verified_email || me.email || s.founderEmail || s.email || "";
+          const mobile = me.verified_mobile || s.phoneMask || "";
+          const masked = !mobile ? "" : mobile.includes("*") ? mobile : maskPhone(mobile);
+          writeSession({
+            email: mail,
+            founderEmail: mail || s.founderEmail,
+            phoneVerified: true,
+            phoneMask: masked,
+          });
+          setEmail(mail);
+          setPhoneVerified(true);
+          setPhoneMask(masked);
+        } catch {
+          if (cancelled) return;
+          setPhoneVerified(true);
+        }
+        if (!cancelled) setReady(true);
+        return;
+      }
+
       if (!s.founderToken) {
         if (!cancelled) setReady(true);
         return;
@@ -149,7 +175,7 @@ export function VerifyForm() {
         claimCode === "key_already_claimed" ||
         claimCode === "claimed"
       ) {
-        window.location.assign(routes.verified);
+        await continueFromAccess(access);
         return;
       }
       if (claimCode === "key_expired") {
@@ -166,7 +192,17 @@ export function VerifyForm() {
       setBusy(false);
       return;
     }
-    window.location.assign(routes.verified);
+    await continueFromAccess(access);
+  }
+
+  async function continueFromAccess(access: string) {
+    try {
+      const me = await getMe(access);
+      applyMeToSession(me);
+      await resumeMember(me);
+    } catch {
+      window.location.replace(routes.verified);
+    }
   }
 
   async function onSend(e: React.FormEvent) {
@@ -202,6 +238,20 @@ export function VerifyForm() {
     const s = readSession();
     if (!ageOk) {
       setError("Confirm you are over 18 to continue.");
+      return;
+    }
+    if (hasAccess() && s.access) {
+      setError("");
+      setBusy(true);
+      if (s.keyId == null) {
+        try {
+          await resumeMember(await getMe());
+        } catch {
+          window.location.replace(routes.verified);
+        }
+        return;
+      }
+      await finishAfterTokens(s.access, s.refresh || undefined, s.userId ?? undefined);
       return;
     }
     if (s.keyId == null || !s.founderToken) {
@@ -259,12 +309,12 @@ export function VerifyForm() {
     }
   }
 
-  if (!ready) return null;
+  if (!ready) return <SessionHold />;
 
   if (phoneVerified) {
     return (
       <main className="verify-wrap">
-        <p className="verify-step">Origin · Step 2 of 3</p>
+        <p className="verify-step">{returning ? "SocialFit" : "Origin · Step 2 of 3"}</p>
         <form onSubmit={onContinue}>
           <h1 className="verify-head">
             Secure your
@@ -345,7 +395,7 @@ export function VerifyForm() {
 
   return (
     <main className="verify-wrap">
-      <p className="verify-step">Origin · Step 2 of 3</p>
+      <p className="verify-step">{returning ? "SocialFit" : "Origin · Step 2 of 3"}</p>
       {!sent ? (
         <form onSubmit={onSend}>
           <h1 className="verify-head">
