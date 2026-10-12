@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { PhiliaIdCard, PidThemeBar } from "@/components/gate/PhiliaIdCard";
-import { getMe, getPassport, patchCeremony, patchPassport } from "@/lib/api/member";
+import { getMe, patchMe, getPassport, patchCeremony, patchPassport, type Me } from "@/lib/api/member";
 import {
   applyPassportToSession,
   getSavedIdTheme,
+  memberDisplayName,
+  nameLines,
   persistCeremonyStep,
   persistIdTheme,
   passportView,
@@ -14,6 +16,7 @@ import {
   type PassportView,
 } from "@/lib/ceremony";
 import { isSessionExpiring, requireMemberAccess } from "@/lib/expire";
+import { patchMeError } from "@/lib/identity";
 import { applyMeToSession, normalizeCeremonyStep, readSession, writeSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 
@@ -23,15 +26,36 @@ export default function CeremonyIdPage() {
   const [claiming, setClaiming] = useState(false);
   const [claimed, setClaimed] = useState(false);
   const [claimLabel, setClaimLabel] = useState("CLAIM ICE CARD");
+  const [nameDraft, setNameDraft] = useState("");
+  const [savedName, setSavedName] = useState("");
+  const [nameSource, setNameSource] = useState("");
+  const [nameBusy, setNameBusy] = useState(false);
+  const [nameNote, setNameNote] = useState("");
+  const [nameErr, setNameErr] = useState("");
+
+  function applyName(me: Me) {
+    applyMeToSession(me);
+    const name = memberDisplayName(me);
+    const lines = nameLines(name);
+    setSavedName(name);
+    setNameDraft(name);
+    setNameSource(String(me.name_source || ""));
+    setView((cur) => (cur ? { ...cur, name, first: lines.first, rest: lines.rest } : cur));
+  }
 
   useEffect(() => {
     if (!requireMemberAccess()) return;
 
     async function boot() {
+      let identity: Me | undefined;
       try {
-        const me = await getMe();
-        applyMeToSession(me);
-        const step = normalizeCeremonyStep(me.ceremony_step);
+        identity = await getMe();
+        applyMeToSession(identity);
+        const name = memberDisplayName(identity);
+        setSavedName(name);
+        setNameDraft(name);
+        setNameSource(String(identity.name_source || ""));
+        const step = normalizeCeremonyStep(identity.ceremony_step);
         const already = readSession().explorerReady;
         if (!already && (step === "summary" || !step)) {
           window.location.replace(routes.ceremony);
@@ -49,13 +73,13 @@ export default function CeremonyIdPage() {
 
       try {
         const passport = await getPassport();
-        applyPassportToSession(passport);
-        const next = passportView(undefined, passport);
+        applyPassportToSession(passport, identity);
+        const next = passportView(identity, passport);
         setView(next);
         setClaimLabel(`CLAIM ${THEME_LABELS[next.theme]} CARD`);
       } catch {
         if (isSessionExpiring()) return;
-        setView(passportView());
+        setView(passportView(identity));
       }
     }
 
@@ -78,7 +102,18 @@ export default function CeremonyIdPage() {
       applyPassportToSession(saved);
       const nextTheme = getSavedIdTheme(saved);
       persistIdTheme(nextTheme);
-      setView((cur) => (cur ? { ...cur, ...passportView(undefined, saved), theme: nextTheme } : cur));
+      setView((cur) =>
+        cur
+          ? {
+              ...cur,
+              ...passportView(undefined, saved),
+              theme: nextTheme,
+              name: cur.name,
+              first: cur.first,
+              rest: cur.rest,
+            }
+          : cur,
+      );
       setClaimed(true);
       setClaimLabel(`✓ ${THEME_LABELS[nextTheme]} CLAIMED · YOUR CARD`);
       persistCeremonyStep("keys");
@@ -96,7 +131,35 @@ export default function CeremonyIdPage() {
     }
   }
 
+  async function saveName() {
+    const nextName = nameDraft.trim();
+    if (!nextName) {
+      setNameErr("Add the name you want on this ID.");
+      setNameNote("");
+      return;
+    }
+    if (nextName === savedName && nameSource === "user") {
+      setNameErr("");
+      setNameNote("Saved on your ID");
+      return;
+    }
+    setNameBusy(true);
+    setNameErr("");
+    setNameNote("");
+    try {
+      const next = await patchMe({ display_name: nextName });
+      applyName(next);
+      setNameNote("Saved on your ID");
+    } catch (e) {
+      if (isSessionExpiring()) return;
+      setNameErr(patchMeError(e));
+    } finally {
+      setNameBusy(false);
+    }
+  }
+
   if (!view) return null;
+  const inviteHint = nameSource === "invite" && !!savedName;
 
   return (
     <main id="sCer2" className="screen active" style={{ overflowY: "auto" }}>
@@ -130,6 +193,7 @@ export default function CeremonyIdPage() {
           </p>
 
           <div className="cer2-pair-wrap">
+            <div className="pid-flip-hint">Tap card to flip · front / back</div>
             <div
               style={{
                 borderRadius: 36,
@@ -142,7 +206,6 @@ export default function CeremonyIdPage() {
             >
               <PhiliaIdCard view={view} flipped={flipped} onFlip={() => setFlipped((v) => !v)} />
             </div>
-            <div className="pid-flip-hint">Tap card to flip · front / back</div>
             <PidThemeBar theme={view.theme} onPick={pickTheme} />
             <button
               className={`pid-claim${claimed ? " claimed" : ""}`}
@@ -152,6 +215,40 @@ export default function CeremonyIdPage() {
             >
               {claimLabel}
             </button>
+            <form
+              className="pid-name-box"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void saveName();
+              }}
+            >
+              <p className="pid-name-box-lbl">Your name on this ID</p>
+              <p className="pid-name-box-hint">
+                {inviteHint
+                  ? "This name is from your application. Save it to keep it on your ID."
+                  : "Printed on the card. You can still change it later from Profile."}
+              </p>
+              <div className="pid-name-box-row">
+                <input
+                  className="pid-name-box-input"
+                  value={nameDraft}
+                  onChange={(e) => {
+                    setNameDraft(e.target.value);
+                    setNameErr("");
+                    setNameNote("");
+                  }}
+                  placeholder="Your name"
+                  maxLength={150}
+                  autoComplete="name"
+                  disabled={nameBusy}
+                />
+                <button className="pid-name-box-save" type="submit" disabled={nameBusy}>
+                  {nameBusy ? "Saving…" : "Save name"}
+                </button>
+              </div>
+              {nameErr ? <p className="pid-name-box-err">{nameErr}</p> : null}
+              {nameNote ? <p className="pid-name-box-note">{nameNote}</p> : null}
+            </form>
           </div>
 
           <p className="cer2-live-lbl">Your first layer is live.</p>
