@@ -29,6 +29,7 @@ import {
   hubArchetypeLabel,
   hubKeysSnapshot,
   hubSegFilled,
+  keyHasLiveSendWindow,
   keyRequestCopy,
   keyRequestCtaLabel,
   soonestKeyDeadline,
@@ -65,12 +66,14 @@ function HubKeyCard({
   const state = k.state === "available" ? "allocated" : k.state || "allocated";
   const name = keyDisplayName(k);
   const unsent = state === "allocated";
+  const canNominate = unsent && keyHasLiveSendWindow(k);
   const deadline = outboundClockMs(k);
   const countdown = deadline ? formatHubCountdown(deadline) : "";
 
   function onCta() {
-    if (unsent && Number(slot) <= 3) {
-      window.location.assign(routes.ceremonyKeys);
+    if (canNominate) {
+      const slotQ = Number(slot) >= 1 ? `?slot=${Number(slot)}` : "";
+      window.location.assign(`${routes.ceremonyKeys}${slotQ}`);
       return;
     }
     if (state === "claimed" || state === "answered") {
@@ -81,9 +84,12 @@ function HubKeyCard({
 
   let ctaLabel = "View →";
   let ctaClass = "cer7-key-cta-ed muted";
-  if (unsent) {
+  if (canNominate) {
     ctaLabel = "Nominate →";
     ctaClass = "cer7-key-cta-ed dark";
+  } else if (unsent) {
+    ctaLabel = "Window closed";
+    ctaClass = "cer7-key-cta-ed muted";
   } else if (state === "sent") {
     ctaLabel = "Awaiting →";
     ctaClass = "cer7-key-cta-ed muted";
@@ -93,7 +99,7 @@ function HubKeyCard({
   }
 
   let tickerLabel: ReactNode = "Key sent";
-  if (unsent) {
+  if (unsent && canNominate) {
     tickerLabel = deadline ? (
       <>
         Send window: <span>{countdown}</span> remaining
@@ -101,6 +107,8 @@ function HubKeyCard({
     ) : (
       "Ready to send"
     );
+  } else if (unsent) {
+    tickerLabel = "Send window closed";
   } else if (state === "activated") {
     tickerLabel = "Key activated";
   } else if (deadline) {
@@ -136,11 +144,11 @@ function HubKeyCard({
     <div className="cer7-key-card" data-key-id={k.key_id != null ? k.key_id : ""}>
       <div className="cer7-key-row">
         <p className={`cer7-key-name-ed${unsent ? " unsent" : ""}`}>{name}</p>
-        <button className={ctaClass} type="button" onClick={onCta}>
+        <button className={ctaClass} type="button" onClick={onCta} disabled={unsent && !canNominate}>
           {ctaLabel}
         </button>
       </div>
-      <p className={`cer7-key-ticker ${unsent ? "cer7-ticker-unsent" : "cer7-ticker-sent"}`}>
+      <p className={`cer7-key-ticker ${canNominate ? "cer7-ticker-unsent" : "cer7-ticker-sent"}`}>
         <span className="cer7-ticker-dot" />
         {tickerLabel}
       </p>

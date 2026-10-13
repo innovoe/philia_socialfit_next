@@ -259,6 +259,8 @@
 .cer5-acc-num{font-family:var(--font-montserrat),sans-serif;font-size:6.5px;letter-spacing:.22em;text-transform:uppercase;font-weight:700;color:rgba(32,32,52,.38);margin:0}
 .cer5-acc-name{font-family:var(--font-inter),system-ui,sans-serif;font-size:13px;font-weight:400;color:var(--steel);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s}
 .cer5-acc-card.is-sent .cer5-acc-name{color:#25D366}
+.cer5-acc-card.is-closed .cer5-acc-name{color:rgba(32,32,52,.40)}
+.cer5-acc-card.is-closed .cer5-active-pill{color:rgba(32,32,52,.38);border-color:rgba(32,32,52,.10)}
 .cer5-acc-card.is-sent .cer5-acc-input,
 .cer5-acc-card.is-sent .uae-phone-wrap,
 .cer5-acc-card.is-sent .cer5-dubai-check,

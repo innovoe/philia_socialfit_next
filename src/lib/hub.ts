@@ -110,9 +110,10 @@ export function hubKeysSnapshot(keys: OutboundKey[], mirror: Mirror | null) {
 
 export function soonestKeyDeadline(keys: OutboundKey[]) {
   let best: number | null = null;
+  const now = Date.now();
   for (const k of keys || []) {
     const dl = outboundClockMs(k);
-    if (dl && (best == null || dl < best)) best = dl;
+    if (dl && dl > now && (best == null || dl < best)) best = dl;
   }
   return best;
 }

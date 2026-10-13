@@ -36,8 +36,10 @@ export { getMyKeys, sendKey, getKeyRequests, createKeyRequest } from "@/lib/api/
 export { getNeighbourhoods, getStoryRead, saveStoryRead } from "@/lib/api/story";
 export { mapOtpError, readOtpSend, sendOtp, verifyOtp } from "@/lib/api/otp";
 export { completeSignalDemo } from "@/lib/api/signal-demo";
+export { askSocialfit, askErrorLine } from "@/lib/api/ask";
 export { normalizeUaePhone, sanitizeContactField, sanitizeUaeLocalInput } from "@/lib/api/phone";
 export {
+  askEndpoints,
   authEndpoints,
   endpoints,
   memberEndpoints,

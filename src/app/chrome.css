@@ -255,4 +255,44 @@ body.fn-on #sRead .sty-scroll-body{padding-bottom:8px}
 .phone-screen #flexNav.fn-mode-build.fn-open {
   width: min(400px, calc(100% - 32px));
 }
+/* Ask: viewport sheet, above the nav, inner scroll — not the page height */
+#apOverlay,
+.phone-screen #apOverlay {
+  position: fixed;
+  left: max(0px, calc((100vw - 430px) / 2));
+  right: auto;
+  top: 0;
+  bottom: auto;
+  width: min(430px, 100vw);
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  z-index: 100003;
+}
+.phone-screen.ap-lock {
+  overflow: hidden;
+  height: 100dvh;
+}
+.ap-home,
+.ap-messages {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+.ap-chips {
+  flex-shrink: 0;
+  max-height: 28%;
+  overflow-y: auto;
+}
+.ap-input-row {
+  padding: 12px 22px max(16px, env(safe-area-inset-bottom, 16px));
+}
+.ap-msg-plain {
+  white-space: pre-wrap;
+}
+.ap-send:disabled,
+.ap-input:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
 

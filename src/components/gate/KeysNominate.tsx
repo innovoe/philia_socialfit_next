@@ -21,10 +21,9 @@ import {
   sentStatusLine,
   type KeyInvite,
 } from "@/lib/ceremony-keys";
-import { goHub } from "@/lib/hub";
+import { goHub, keyHasLiveSendWindow } from "@/lib/hub";
 
-const SLOTS = [1, 2, 3] as const;
-type Slot = (typeof SLOTS)[number];
+type Slot = number;
 
 type Draft = {
   name: string;
@@ -55,6 +54,16 @@ function WaIcon() {
   );
 }
 
+function slotOf(k: OutboundKey, i: number) {
+  const n = Number(k.slot);
+  return n >= 1 ? n : i + 1;
+}
+
+function focusSlotFromUrl() {
+  const n = Number(new URLSearchParams(window.location.search).get("slot"));
+  return Number.isFinite(n) && n >= 1 ? n : null;
+}
+
 export function KeysNominate() {
   const [keys, setKeys] = useState<OutboundKey[]>([]);
   const [open, setOpen] = useState<Slot | null>(1);
@@ -71,22 +80,27 @@ export function KeysNominate() {
   const [clock, setClock] = useState("24:00:00");
 
   function patchDraft(n: Slot, patch: Partial<Draft>) {
-    setDrafts((cur) => ({ ...cur, [n]: { ...cur[n], ...patch } }));
+    setDrafts((cur) => ({ ...cur, [n]: { ...(cur[n] || emptyDraft()), ...patch } }));
   }
 
   function applyKeys(list: OutboundKey[]) {
-    setKeys(list);
-    let firstUnsent: Slot | null = null;
-    list.forEach((k, i) => {
-      const slot = (Number(k.slot) || i + 1) as Slot;
-      if (![1, 2, 3].includes(slot)) return;
-      if (cer5IsUnsent(k) && firstUnsent == null) firstUnsent = slot;
+    const sorted = [...list].sort((a, b) => (Number(a.slot) || 0) - (Number(b.slot) || 0));
+    setKeys(sorted);
+    const focus = focusSlotFromUrl();
+    let firstLive: Slot | null = null;
+    sorted.forEach((k, i) => {
+      const slot = slotOf(k, i);
+      if (keyHasLiveSendWindow(k) && firstLive == null) firstLive = slot;
     });
+    const focusLive =
+      focus != null && sorted.some((k, i) => slotOf(k, i) === focus && keyHasLiveSendWindow(k))
+        ? focus
+        : null;
     setInvites((cur) => {
       const next = { ...cur };
-      list.forEach((k, i) => {
-        const slot = (Number(k.slot) || i + 1) as Slot;
-        if (![1, 2, 3].includes(slot)) return;
+      sorted.forEach((k, i) => {
+        const slot = slotOf(k, i);
+        if (!next[slot]) next[slot] = null;
         if (k.invite_code || k.invite_url) {
           next[slot] = { invite_code: k.invite_code, invite_url: k.invite_url };
         }
@@ -95,9 +109,9 @@ export function KeysNominate() {
     });
     setDrafts((cur) => {
       const next = { ...cur };
-      list.forEach((k, i) => {
-        const slot = (Number(k.slot) || i + 1) as Slot;
-        if (![1, 2, 3].includes(slot)) return;
+      sorted.forEach((k, i) => {
+        const slot = slotOf(k, i);
+        if (!next[slot]) next[slot] = emptyDraft();
         if (!cer5IsUnsent(k)) {
           const name = k.nominee_name || "Sent";
           const contact = k.nominee_contact || k.claimer_mobile || k.claimer_email || "";
@@ -115,7 +129,7 @@ export function KeysNominate() {
       });
       return next;
     });
-    setOpen(firstUnsent || 1);
+    setOpen(focusLive || firstLive || Number(sorted[0]?.slot) || 1);
   }
 
   useEffect(() => {
@@ -130,7 +144,7 @@ export function KeysNominate() {
     let best: number | null = null;
     keys.forEach((k) => {
       const dl = outboundClockMs(k);
-      if (dl && (best == null || dl < best)) best = dl;
+      if (dl && dl > Date.now() && (best == null || dl < best)) best = dl;
     });
     function paint() {
       setClock(formatCer5Clock(best));
@@ -160,8 +174,8 @@ export function KeysNominate() {
 
   async function onSend(n: Slot) {
     const key = keys.find((k) => Number(k.slot) === n);
-    if (key && !cer5IsUnsent(key)) return;
-    const draft = drafts[n];
+    if (key && !keyHasLiveSendWindow(key)) return;
+    const draft = drafts[n] || emptyDraft();
     const name = draft.name.trim();
     if (!name) {
       patchDraft(n, { error: "Add a nominee name." });
@@ -218,8 +232,11 @@ export function KeysNominate() {
         const num = contact.replace(/\D/g, "");
         window.open(`https://wa.me/${num}?text=${msg}`, "_blank");
       }
-      if (n < 3) {
-        window.setTimeout(() => setOpen((n + 1) as Slot), 400);
+      const nextLive = keys
+        .filter((k) => Number(k.slot) !== n && keyHasLiveSendWindow(k))
+        .sort((a, b) => (Number(a.slot) || 0) - (Number(b.slot) || 0))[0];
+      if (nextLive) {
+        window.setTimeout(() => setOpen(Number(nextLive.slot)), 400);
       }
       getMyKeys().then(setKeys).catch(() => {});
     } catch (err) {
@@ -251,8 +268,10 @@ export function KeysNominate() {
               <path d="M12 7v14M9 13h6" />
             </svg>
           </div>
-          <p className="cer5-info-label">3 Keys issued</p>
-          <p className="cer5-info-sub">Send window from activate</p>
+          <p className="cer5-info-label">
+            {keys.length || 3} Key{(keys.length || 3) === 1 ? "" : "s"} issued
+          </p>
+          <p className="cer5-info-sub">Send while the window is open</p>
         </div>
         <div className="cer5-info-sep" />
         <div className="cer5-info-col">
@@ -269,37 +288,52 @@ export function KeysNominate() {
       </div>
 
       <div className="cer5-accordion" style={{ marginTop: 28 }}>
-        {SLOTS.map((n) => {
+        {(keys.length ? keys : [{ slot: 1 }, { slot: 2 }, { slot: 3 }] as OutboundKey[]).map((row, i, list) => {
+          const n = slotOf(row, i);
           const key = keys.find((k) => Number(k.slot) === n);
           const sent = !!(key && !cer5IsUnsent(key));
-          const draft = drafts[n];
+          const canSend = !!(key && keyHasLiveSendWindow(key));
+          const closed = !!(key && cer5IsUnsent(key) && !canSend);
+          const draft = drafts[n] || emptyDraft();
           const isOpen = open === n;
-          const label = sent ? `${draft.name || key?.nominee_name || "Sent"} ✓` : draft.name.trim();
+          const total = list.length;
+          const label = sent
+            ? `${draft.name || key?.nominee_name || "Sent"} ✓`
+            : closed
+              ? "Window closed"
+              : draft.name.trim();
           const heading = sent
             ? `${draft.name || key?.nominee_name || "This nominee"} already holds this Key.`
-            : "Nominate someone who gets you.";
+            : closed
+              ? "This send window has closed."
+              : "Nominate someone who gets you.";
           const desc = sent
             ? cer5StatusCopy(key)
-            : "Someone who has seen you socially. Not just professionally or online.";
-          const pill = sent ? cer5PillLabel(key) : "Send window";
+            : closed
+              ? "This Key can no longer be nominated. New Keys from Philia keep their own send window."
+              : "Someone who has seen you socially. Not just professionally or online.";
+          const pill = sent ? cer5PillLabel(key) : closed ? "Closed" : "Send window";
           const msg = cer5BuildMsg(draft.name, invites[n]);
           const pad = n < 10 ? `0${n}` : String(n);
+          const of = total < 10 ? `0${total}` : String(total);
 
           return (
             <div
               key={n}
-              className={`cer5-acc-card${isOpen ? " is-open" : ""}${sent ? " is-sent" : ""}`}
+              className={`cer5-acc-card${isOpen ? " is-open" : ""}${sent ? " is-sent" : ""}${closed ? " is-closed" : ""}`}
               data-key={n}
             >
               <div className="cer5-acc-header" onClick={() => toggle(n)}>
                 <div className="cer5-key-badge">{pad}</div>
                 <div className="cer5-acc-header-left">
-                  <p className="cer5-acc-num">Philia Key · {pad} of 03</p>
+                  <p className="cer5-acc-num">
+                    Philia Key · {pad} of {of}
+                  </p>
                   <p className="cer5-acc-name">{label}</p>
                 </div>
                 <div className="cer5-acc-header-right">
                   <div className="cer5-active-pill">
-                    {!sent ? (
+                    {canSend ? (
                       <svg viewBox="0 0 24 24">
                         <circle cx="12" cy="12" r="9" />
                         <polyline points="12,7 12,12 15,15" />
@@ -319,6 +353,8 @@ export function KeysNominate() {
                   <div className="cer5-acc-divider" />
                   <p className="cer5-acc-heading">{heading}</p>
                   <p className="cer5-acc-desc">{desc}</p>
+                  {closed ? null : (
+                    <>
                   <input
                     className="cer5-acc-input"
                     placeholder="Their name"
@@ -379,6 +415,8 @@ export function KeysNominate() {
                     <WaIcon />
                     {draft.sending ? "Sending…" : sent ? (pill === "Activated" ? "Key activated ✓" : "Key sent ✓") : "Send Key →"}
                   </button>
+                    </>
+                  )}
                   {draft.error ? (
                     <p
                       style={{

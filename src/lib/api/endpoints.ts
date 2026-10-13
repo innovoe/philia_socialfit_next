@@ -43,6 +43,11 @@ export const authEndpoints = {
   refreshSession: auth("POST", false, "refreshSession", () => "/auth/refresh/"),
 } as const;
 
+/** Public Ask — API root, never send a member JWT. */
+export const askEndpoints = {
+  askSocialfit: auth("POST", false, "askSocialfit", () => "/ask-socialfit/"),
+} as const;
+
 /** Public SocialFit routes (no JWT). */
 export const publicEndpoints = {
   validateKeyCode: socialfit("POST", false, "validateKeyCode", () => "/keys/validate/"),
@@ -135,6 +140,7 @@ export const memberEndpoints = {
 
 export const endpoints = {
   ...authEndpoints,
+  ...askEndpoints,
   ...publicEndpoints,
   ...memberEndpoints,
 } as const;

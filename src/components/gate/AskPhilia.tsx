@@ -19,8 +19,9 @@ import {
   rewriteAskHtml,
   type TicketState,
 } from "@/lib/ask-philia";
+import { askErrorLine, askSocialfit, htmlToAskText, type AskMessage } from "@/lib/api/ask";
 
-type Msg = { id: number; html: string; user: boolean };
+type Msg = { id: number; html: string; user: boolean; plain?: boolean; error?: boolean };
 
 type AskPhiliaProps = {
   open: boolean;
@@ -49,10 +50,15 @@ export function AskPhilia({ open, explorerReady = false, onClose }: AskPhiliaPro
   const [draft, setDraft] = useState("");
   const nextId = useRef(1);
   const listRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<Msg[]>([]);
+  const openRef = useRef(open);
+  openRef.current = open;
+  messagesRef.current = messages;
 
   function resetHome() {
     setInChat(false);
     setMessages([]);
+    messagesRef.current = [];
     setChips(null);
     setIssueChips(false);
     setThinking(false);
@@ -62,6 +68,13 @@ export function AskPhilia({ open, explorerReady = false, onClose }: AskPhiliaPro
   }
 
   useEffect(() => {
+    const root = document.querySelector(".phone-screen");
+    if (open) root?.classList.add("ap-lock");
+    else root?.classList.remove("ap-lock");
+    return () => root?.classList.remove("ap-lock");
+  }, [open]);
+
+  useEffect(() => {
     if (open) return;
     const t = window.setTimeout(resetHome, 340);
     return () => window.clearTimeout(t);
@@ -69,7 +82,11 @@ export function AskPhilia({ open, explorerReady = false, onClose }: AskPhiliaPro
 
   function push(html: string, user: boolean) {
     const id = nextId.current++;
-    setMessages((prev) => [...prev, { id, html: user ? html : rewriteAskHtml(html), user }]);
+    setMessages((prev) => {
+      const next = [...prev, { id, html: user ? html : rewriteAskHtml(html), user }];
+      messagesRef.current = next;
+      return next;
+    });
     return id;
   }
 
@@ -192,11 +209,50 @@ export function AskPhilia({ open, explorerReady = false, onClose }: AskPhiliaPro
     });
   }
 
-  function sendDraft() {
+  function threadFrom(msgs: Msg[]): AskMessage[] {
+    return msgs
+      .filter((m) => !m.error)
+      .map((m) => ({
+        role: m.user ? "user" : "assistant",
+        content: m.plain || m.user ? m.html : htmlToAskText(m.html),
+      }));
+  }
+
+  async function sendDraft() {
     const q = draft.trim();
-    if (!q) return;
+    if (!q || thinking) return;
     setDraft("");
-    ask(q);
+    startChat();
+    setChips(null);
+    setIssueChips(false);
+    const userMsg: Msg = { id: nextId.current++, html: q, user: true, plain: true };
+    const history = [...messagesRef.current, userMsg];
+    messagesRef.current = history;
+    setMessages(history);
+    setThinking(true);
+    try {
+      const answer = await askSocialfit([...threadFrom(history)]);
+      if (!openRef.current) return;
+      const text = answer || "I don’t have a clear answer for that. Try another way of asking.";
+      const bot: Msg = { id: nextId.current++, html: text, user: false, plain: true };
+      const next = [...messagesRef.current, bot];
+      messagesRef.current = next;
+      setMessages(next);
+    } catch (err) {
+      if (!openRef.current) return;
+      const bot: Msg = {
+        id: nextId.current++,
+        html: askErrorLine(err),
+        user: false,
+        plain: true,
+        error: true,
+      };
+      const next = [...messagesRef.current, bot];
+      messagesRef.current = next;
+      setMessages(next);
+    } finally {
+      if (openRef.current) setThinking(false);
+    }
   }
 
   function toggleKb(id: string) {
@@ -367,7 +423,11 @@ export function AskPhilia({ open, explorerReady = false, onClose }: AskPhiliaPro
       >
         {messages.map((m) => (
           <div key={m.id} className={`ap-msg ${m.user ? "ap-msg-user" : "ap-msg-ai"}`}>
-            {m.user ? <p>{m.html}</p> : <p dangerouslySetInnerHTML={{ __html: m.html }} />}
+            {m.user || m.plain ? (
+              <p className={m.plain && !m.user ? "ap-msg-plain" : undefined}>{m.html}</p>
+            ) : (
+              <p dangerouslySetInnerHTML={{ __html: m.html }} />
+            )}
           </div>
         ))}
         {thinking ? <Typing /> : null}
@@ -395,12 +455,13 @@ export function AskPhilia({ open, explorerReady = false, onClose }: AskPhiliaPro
           className="ap-input"
           placeholder={inChat ? "Ask a follow-up…" : "Ask anything about your SocialFit journey."}
           value={draft}
+          disabled={thinking}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") sendDraft();
+            if (e.key === "Enter") void sendDraft();
           }}
         />
-        <button className="ap-send" type="button" onClick={sendDraft}>
+        <button className="ap-send" type="button" disabled={thinking} onClick={() => void sendDraft()}>
           <svg
             width="18"
             height="18"
