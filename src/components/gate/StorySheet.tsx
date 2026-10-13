@@ -126,12 +126,11 @@ export function StorySheet({
     const list = homeSearchRows(pods, search);
     if (fieldKey === "work") {
       list.push({ kind: "fromhome", main: WORK_FROM_HOME, sub: WORK_FROM_HOME_SUB, value: WORK_FROM_HOME });
-    } else {
-      if (fieldKey === "frequent") {
-        list.push({ kind: "varies", main: FREQUENT_VARIES, sub: FREQUENT_VARIES_SUB, value: FREQUENT_VARIES });
-      }
-      list.push({ kind: "another", main: HOME_ANOTHER, sub: HOME_ANOTHER_SUB, value: HOME_ANOTHER });
     }
+    if (fieldKey === "frequent") {
+      list.push({ kind: "varies", main: FREQUENT_VARIES, sub: FREQUENT_VARIES_SUB, value: FREQUENT_VARIES });
+    }
+    list.push({ kind: "another", main: HOME_ANOTHER, sub: HOME_ANOTHER_SUB, value: HOME_ANOTHER });
     return list;
   }, [isPod, pods, search, fieldKey]);
 
@@ -163,9 +162,9 @@ export function StorySheet({
 
   function confirmOther() {
     const val = otherVal.trim();
-    if (fieldKey === "home" || fieldKey === "frequent") {
+    if (fieldKey === "home" || fieldKey === "work" || fieldKey === "frequent") {
       if (!val) {
-        if (fieldKey === "home") pickSingle(HOME_ANOTHER);
+        if (fieldKey === "home" || fieldKey === "work") pickSingle(HOME_ANOTHER);
         return;
       }
       pickSingle(resolveHome(pods || [], val) || val);
@@ -211,7 +210,7 @@ export function StorySheet({
                 }
                 const mapped = resolveHome(pods || [], q);
                 if (mapped) pickSingle(mapped);
-                else if (fieldKey === "frequent") pickSingle(q);
+                else if (fieldKey === "frequent" || fieldKey === "work") pickSingle(q);
               }}
             />
           </div>
@@ -260,7 +259,7 @@ export function StorySheet({
                         ? "Nothing in the Pod list matches. Type your neighbourhood — this may waitlist you if it isn’t a Dubai Pod area."
                         : fieldKey === "frequent"
                           ? "Nothing in the Pod list matches. Type another area, or choose Varies."
-                          : "Nothing in the Pod list matches. Choose From home if you work remotely."}
+                          : "Nothing in the Pod list matches. Type your area, or choose From home if you work remotely."}
                     </p>
                   ) : null}
                   {rows.map((row) => {
@@ -287,7 +286,7 @@ export function StorySheet({
                       </button>
                     );
                   })}
-                  {fieldKey === "home" || fieldKey === "frequent" ? (
+                  {fieldKey === "home" || fieldKey === "work" || fieldKey === "frequent" ? (
                     <div className="sb-other-row">
                       <button
                         className="sb-other-btn"

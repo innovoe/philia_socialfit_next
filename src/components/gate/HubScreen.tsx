@@ -82,17 +82,16 @@ function HubKeyCard({
     }
   }
 
-  let ctaLabel = "View →";
+  let ctaLabel = "";
   let ctaClass = "cer7-key-cta-ed muted";
+  let ctaOff = false;
   if (canNominate) {
     ctaLabel = "Nominate →";
     ctaClass = "cer7-key-cta-ed dark";
   } else if (unsent) {
     ctaLabel = "Window closed";
     ctaClass = "cer7-key-cta-ed muted";
-  } else if (state === "sent") {
-    ctaLabel = "Awaiting →";
-    ctaClass = "cer7-key-cta-ed muted";
+    ctaOff = true;
   } else if (state === "claimed" || state === "answered") {
     ctaLabel = "Nudge →";
     ctaClass = "cer7-key-cta-ed";
@@ -144,9 +143,11 @@ function HubKeyCard({
     <div className="cer7-key-card" data-key-id={k.key_id != null ? k.key_id : ""}>
       <div className="cer7-key-row">
         <p className={`cer7-key-name-ed${unsent ? " unsent" : ""}`}>{name}</p>
-        <button className={ctaClass} type="button" onClick={onCta} disabled={unsent && !canNominate}>
-          {ctaLabel}
-        </button>
+        {ctaLabel ? (
+          <button className={ctaClass} type="button" onClick={onCta} disabled={ctaOff}>
+            {ctaLabel}
+          </button>
+        ) : null}
       </div>
       <p className={`cer7-key-ticker ${canNominate ? "cer7-ticker-unsent" : "cer7-ticker-sent"}`}>
         <span className="cer7-ticker-dot" />

@@ -93,7 +93,7 @@ export function OriginsEmailForm() {
         <>
           SocialFit is invite-only.
           <br />
-          How are you entering?
+          For Origins members, please enter your registered email to access your key code.
         </>
       }
       micro="No open signup · UAE mobile required"
@@ -122,7 +122,7 @@ export function OriginsEmailForm() {
           {error || " "}
         </p>
         <button className={`gate-cta gate-cta-primary${ready ? "" : " is-wait"}`} disabled={!ready} type="submit">
-          <span>Send code</span>
+          <span>{busy ? "One moment…" : "Continue"}</span>
           <span>→</span>
         </button>
       </form>
