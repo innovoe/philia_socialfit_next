@@ -165,6 +165,23 @@ export function LandingHome() {
           <Link href={routes.privacy} target="_blank" rel="noopener noreferrer">
             Privacy Policy
           </Link>
+          <span className="gate-legal-sep" aria-hidden="true">
+            ·
+          </span>
+          <Link
+            href={routes.privacyAr}
+            target="_blank"
+            rel="noopener noreferrer"
+            lang="ar"
+          >
+            سياسة الخصوصية
+          </Link>
+          <span className="gate-legal-sep" aria-hidden="true">
+            ·
+          </span>
+          <Link href={routes.terms} target="_blank" rel="noopener noreferrer">
+            Terms
+          </Link>
         </p>
       </section>
     </main>

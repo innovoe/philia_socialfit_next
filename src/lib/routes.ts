@@ -30,5 +30,6 @@ export const routes = {
   inviteMirror: "/invite/mirror",
   invitePrimer: "/invite/primer",
   privacy: "/privacy",
+  privacyAr: "/privacy/ar",
   terms: "/terms",
 } as const;

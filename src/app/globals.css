@@ -243,6 +243,18 @@ body {
   text-decoration: underline;
 }
 
+.gate-legal-sep {
+  margin: 0 8px;
+  font-size: 8px;
+  color: rgba(32, 32, 52, 0.28);
+}
+
+.gate-legal a[lang="ar"] {
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 700;
+}
+
 .gate-placeholder {
   width: 100%;
   flex: 1;

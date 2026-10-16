@@ -497,6 +497,28 @@ export function ProfileScreen() {
               </svg>
             }
           />
+          <LinkRow
+            href={routes.privacyAr}
+            title="سياسة الخصوصية"
+            sub="Arabic Privacy Policy"
+            icon={
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="rgba(32,32,52,.48)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 2.5L3.5 4.5V9c0 2.5 2 4.5 4.5 5.5 2.5-1 4.5-3 4.5-5.5V4.5z" />
+                <path d="M6 8.5l1.5 1.5 3-3" />
+              </svg>
+            }
+          />
+          <LinkRow
+            href={routes.terms}
+            title="Terms"
+            sub="Membership, Keys, and participation rules"
+            icon={
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="rgba(32,32,52,.48)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4.5 3.5h7v9h-7z" />
+                <path d="M6 6h4M6 8.5h4M6 11h2.5" />
+              </svg>
+            }
+          />
         </div>
 
         <div style={{ height: 1, background: "rgba(32,32,52,.07)", marginBottom: 26 }} />
