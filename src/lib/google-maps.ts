@@ -263,19 +263,19 @@ export async function searchPlacePredictions(
       locationBias: { radius: 35000, center: bias },
       sessionToken: sessionFor(g),
     });
-    return (suggestions || [])
-      .slice(0, 6)
-      .map((s) => {
-        const p = s.placePrediction;
-        if (!p?.placeId) return null;
-        return {
-          placeId: p.placeId,
-          main: p.mainText?.text || p.text?.text || "",
-          sub: p.secondaryText?.text || "",
-          toPlace: p.toPlace ? () => p.toPlace!() : undefined,
-        };
-      })
-      .filter((p): p is PlacePrediction => p != null);
+    const out: PlacePrediction[] = [];
+    for (const s of (suggestions || []).slice(0, 6)) {
+      const p = s.placePrediction;
+      if (!p?.placeId) continue;
+      const pred: PlacePrediction = {
+        placeId: p.placeId,
+        main: p.mainText?.text || p.text?.text || "",
+        sub: p.secondaryText?.text || "",
+      };
+      if (p.toPlace) pred.toPlace = () => p.toPlace!();
+      out.push(pred);
+    }
+    return out;
   }
   const AutocompleteService = g.maps.places.AutocompleteService;
   if (!AutocompleteService) return [];
