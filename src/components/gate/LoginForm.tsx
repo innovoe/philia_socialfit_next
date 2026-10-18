@@ -18,6 +18,7 @@ import { readSession, writeSession } from "@/lib/session";
 import { resumeMember } from "@/lib/resume";
 import { clearStoryProgress } from "@/lib/story-answers";
 import { routes } from "@/lib/routes";
+import { CtaEnd, ctaStateClass } from "@/components/gate/CtaEnd";
 import { OtpInput } from "@/components/gate/OtpInput";
 import { SessionHold } from "@/components/gate/SessionHold";
 
@@ -51,10 +52,12 @@ export function LoginForm() {
   }, []);
 
   const phone = normalizeUaePhone(`+971${localPhone}`);
-  const canSend = isValidEmail(email) && (!needPhone || !!phone) && !busy;
-  const canVerify = emailRequired
-    ? emailCode.length === 6 && phoneCode.length === 6 && !busy
-    : phoneCode.length === 6 && !busy;
+  const sendReady = isValidEmail(email) && (!needPhone || !!phone);
+  const verifyReady = emailRequired
+    ? emailCode.length === 6 && phoneCode.length === 6
+    : phoneCode.length === 6;
+  const canSend = sendReady && !busy;
+  const canVerify = verifyReady && !busy;
 
   function onPhoneChange(value: string) {
     setLocalPhone(sanitizeUaeLocalInput(value));
@@ -232,12 +235,13 @@ export function LoginForm() {
             {error || " "}
           </p>
           <button
-            className={`gate-cta gate-cta-primary${canSend ? "" : " is-wait"}`}
+            className={`gate-cta gate-cta-primary${ctaStateClass(busy, sendReady)}`}
             disabled={!canSend}
             type="submit"
+            aria-busy={busy}
           >
             <span>{busy ? "Sending…" : "Send code"}</span>
-            <span>→</span>
+            <CtaEnd busy={busy} />
           </button>
           <Link href={routes.unlock} className="gate-text-link" style={{ marginTop: 18, display: "inline-block" }}>
             I have a Key instead
@@ -283,13 +287,14 @@ export function LoginForm() {
             {error || " "}
           </p>
           <button
-            className={`gate-cta gate-cta-primary${canVerify ? "" : " is-wait"}`}
+            className={`gate-cta gate-cta-primary${ctaStateClass(busy, verifyReady)}`}
             disabled={!canVerify}
             type="submit"
             style={{ marginTop: 8 }}
+            aria-busy={busy}
           >
             <span>{busy ? "Signing in…" : "Log in"}</span>
-            <span>→</span>
+            <CtaEnd busy={busy} />
           </button>
         </form>
       )}

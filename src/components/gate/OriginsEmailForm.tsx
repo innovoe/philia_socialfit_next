@@ -8,6 +8,7 @@ import { bounceIfLiveSession } from "@/lib/live-session";
 import { readSession, writeSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { GateChrome } from "@/components/gate/GateChrome";
+import { CtaEnd, ctaStateClass } from "@/components/gate/CtaEnd";
 import { SessionHold } from "@/components/gate/SessionHold";
 
 export function OriginsEmailForm() {
@@ -44,7 +45,8 @@ export function OriginsEmailForm() {
     return () => window.clearTimeout(id);
   }, [router]);
 
-  const ready = isValidEmail(email) && !busy && !blocked;
+  const filled = isValidEmail(email) && !blocked;
+  const ready = filled && !busy;
 
   function applyEmail(value: string) {
     setEmail(value);
@@ -121,9 +123,14 @@ export function OriginsEmailForm() {
         <p className="gate-error" style={{ opacity: error ? 1 : 0 }}>
           {error || " "}
         </p>
-        <button className={`gate-cta gate-cta-primary${ready ? "" : " is-wait"}`} disabled={!ready} type="submit">
+        <button
+          className={`gate-cta gate-cta-primary${ctaStateClass(busy, filled)}`}
+          disabled={!ready}
+          type="submit"
+          aria-busy={busy}
+        >
           <span>{busy ? "One moment…" : "Continue"}</span>
-          <span>→</span>
+          <CtaEnd busy={busy} />
         </button>
       </form>
     </GateChrome>

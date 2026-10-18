@@ -80,13 +80,9 @@ export function PhiliaIdCard({
                 <div className="pid-rul" />
                 <div className="pid-wld">Work · Life · Belonging</div>
               </div>
-              <div className="pid-nfc" aria-hidden="true">
-                <svg viewBox="0 0 32 36" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-                  <path d="M6 28c6-6 14-6 20 0" />
-                  <path d="M10 22c4-4 8-4 12 0" />
-                  <path d="M14 16c2-2 4-2 6 0" />
-                  <circle cx="16" cy="10" r="1.6" fill="currentColor" stroke="none" />
-                </svg>
+              <div className="pid-mark">
+                <span>Dubai</span>
+                <span>First Wave</span>
               </div>
             </div>
           </section>

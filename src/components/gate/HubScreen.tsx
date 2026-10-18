@@ -428,7 +428,7 @@ export function HubScreen({ initialTab = 1 }: { initialTab?: 1 | 2 | 3 }) {
 
           <div className="cer7-insider-card">
             <div className="cer7-insider-body-ed">
-              <p className="cer7-insider-title-ed">Insider complimentary for month 1 unlocks at launch.</p>
+              <p className="cer7-insider-title-ed">Insider 14-day trial unlocks at launch.</p>
             </div>
             <div
               className={`cer7-unlock-cb${unlockOn ? " checked" : ""}`}

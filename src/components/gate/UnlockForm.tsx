@@ -15,6 +15,7 @@ import { resumeMember } from "@/lib/resume";
 import { applyMeToSession, hasAccess, readSession, writeSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { SessionHold } from "@/components/gate/SessionHold";
+import { CtaEnd, ctaStateClass } from "@/components/gate/CtaEnd";
 
 export function UnlockForm() {
   const [code, setCode] = useState("");
@@ -50,7 +51,8 @@ export function UnlockForm() {
     };
   }, []);
 
-  const ready = claimMode ? !busy : normaliseKeyCode(code).length >= 4 && !busy;
+  const filled = claimMode || normaliseKeyCode(code).length >= 4;
+  const ready = filled && !busy;
 
   async function onClaim() {
     if (busy) return;
@@ -166,13 +168,14 @@ export function UnlockForm() {
               {error || " "}
             </p>
             <button
-              className={`gate-cta gate-cta-primary${ready ? "" : " is-wait"}`}
+              className={`gate-cta gate-cta-primary${ctaStateClass(busy, filled)}`}
               disabled={!ready}
               type="button"
               onClick={() => void onClaim()}
+              aria-busy={busy}
             >
               <span>{busy ? "Claiming…" : "Claim my key"}</span>
-              <span>→</span>
+              <CtaEnd busy={busy} />
             </button>
           </>
         ) : (
@@ -202,9 +205,14 @@ export function UnlockForm() {
               <p className="gate-error" style={{ opacity: error ? 1 : 0 }}>
                 {error || " "}
               </p>
-              <button className={`gate-cta gate-cta-primary${ready ? "" : " is-wait"}`} disabled={!ready} type="submit">
+              <button
+                className={`gate-cta gate-cta-primary${ctaStateClass(busy, filled)}`}
+                disabled={!ready}
+                type="submit"
+                aria-busy={busy}
+              >
                 <span>{busy ? "Checking…" : "Enter your key"}</span>
-                <span>→</span>
+                <CtaEnd busy={busy} />
               </button>
             </form>
             <Link href={routes.login} className="gate-text-link" style={{ marginTop: 16, display: "inline-block" }}>

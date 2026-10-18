@@ -24,8 +24,10 @@ import {
   persistAnswers,
   readComplete,
   resumeUrl,
+  useStoryAnswers,
 } from "@/lib/story-answers";
 import { StorySheet } from "@/components/gate/StorySheet";
+import { CtaEnd } from "@/components/gate/CtaEnd";
 
 const CUE_SVG = (
   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -102,7 +104,7 @@ function Sentence({
 
 export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: number }) {
   const router = useRouter();
-  const [answers, setAnswers] = useState<StoryAnswers>(loadAnswers);
+  const answers = useStoryAnswers();
   const [ready, setReady] = useState(true);
   const [sheetKey, setSheetKey] = useState<string | null>(null);
   const [review, setReview] = useState(false);
@@ -123,7 +125,6 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
     hydrateAnswersFromServer()
       .then((next) => {
       if (cancelled || isSessionExpiring()) return;
-      setAnswers(next);
       if (hydrated.current) {
         setReady(true);
         return;
@@ -235,21 +236,19 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
   const backOn = mode === "read" ? true : index > 0 || index === 3;
 
   function savePick(key: string, value: StoryAnswer, extra?: { partnershipNote?: string }) {
-    setAnswers((cur) => {
-      const next = { ...cur, [key]: value };
-      if (key === "need") {
-        if (Array.isArray(value) && value.includes("Partnership")) {
-          next.partnershipNote = extra?.partnershipNote || "";
-        } else {
-          delete next.partnershipNote;
-        }
+    const next = { ...loadAnswers(), [key]: value };
+    if (key === "need") {
+      if (Array.isArray(value) && value.includes("Partnership")) {
+        next.partnershipNote = extra?.partnershipNote || "";
+      } else {
+        delete next.partnershipNote;
       }
-      persistAnswers(next);
-      return next;
-    });
+    }
+    persistAnswers(next);
   }
 
   function go(url: string) {
+    if (leaving) return;
     setLeaving(true);
     window.setTimeout(() => {
       router.push(url);
@@ -257,7 +256,7 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
   }
 
   function onContinue() {
-    if (!done) return;
+    if (leaving || !done) return;
     if (mode === "story") {
       if (index >= STORY_SECTIONS.length - 1) {
         setReview(true);
@@ -295,6 +294,7 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
   }
 
   function onReviewContinue() {
+    if (leaving) return;
     const postRead = readComplete(answers);
     if (!postRead) {
       setReview(false);
@@ -307,6 +307,7 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
       router.push(`${routes.story}/${late + 1}`);
       return;
     }
+    setLeaving(true);
     persistAnswers(answers);
     window.location.assign(routes.ceremony);
   }
@@ -397,11 +398,14 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
         </button>
         <p className="sty-ed-helper" />
         <button
-          className={`sty-ed-continue${done ? " on" : ""}`}
+          className={`sty-ed-continue${done || leaving ? " on" : ""}${leaving ? " is-busy" : ""}`}
           type="button"
           onClick={onContinue}
+          disabled={leaving}
+          aria-busy={leaving}
         >
-          {continueLabel}
+          {leaving ? "One moment…" : continueLabel.replace(/\s*→\s*$/, "")}
+          <CtaEnd busy={leaving} />
         </button>
       </div>
 
@@ -437,9 +441,15 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
               <button className="str-edit-btn" type="button" onClick={() => setReview(false)}>
                 ← Edit
               </button>
-              <button className="str-continue-btn" type="button" onClick={onReviewContinue}>
-                <span>{readComplete(answers) ? "Continue" : "Signal Read"}</span>
-                <span>→</span>
+              <button
+                className={`str-continue-btn${leaving ? " is-busy" : ""}`}
+                type="button"
+                onClick={onReviewContinue}
+                disabled={leaving}
+                aria-busy={leaving}
+              >
+                <span>{leaving ? "One moment…" : readComplete(answers) ? "Continue" : "Signal Read"}</span>
+                <CtaEnd busy={leaving} />
               </button>
             </div>
           </div>

@@ -12,6 +12,7 @@ import {
 import { isSessionExpiring, requireMemberAccess } from "@/lib/expire";
 import { applyMeToSession, readSession, writeSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
+import { CtaEnd } from "@/components/gate/CtaEnd";
 
 export default function CeremonyMirrorPage() {
   const [view, setView] = useState<PassportView | null>(null);
@@ -113,9 +114,15 @@ export default function CeremonyMirrorPage() {
         </p>
 
         <div style={{ marginTop: "auto", paddingTop: 48 }}>
-          <button className="cer-cta" type="button" onClick={enterKeys} disabled={busy}>
-            <span>Choose my 3 people</span>
-            <span>→</span>
+          <button
+            className={`cer-cta${busy ? " is-busy" : ""}`}
+            type="button"
+            onClick={enterKeys}
+            disabled={busy}
+            aria-busy={busy}
+          >
+            <span>{busy ? "One moment…" : "Choose my 3 people"}</span>
+            <CtaEnd busy={busy} />
           </button>
           <div className="cer-status">Self-read complete · Social mirror pending</div>
         </div>

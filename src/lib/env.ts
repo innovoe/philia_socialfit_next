@@ -34,9 +34,11 @@ const authBase = stripSlash(
 );
 
 const useMocksRaw = readPublic(process.env.NEXT_PUBLIC_PHILIA_USE_MOCKS, "false");
+const googleMapsKey = readPublic(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY, "");
 
 export const env = {
   apiBase,
   authBase,
   useMocks: useMocksRaw === "true" || useMocksRaw === "1",
+  googleMapsKey,
 } as const;

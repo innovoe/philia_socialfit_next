@@ -25,7 +25,11 @@ export function saveStoryRead(body: {
   story_blanks: Record<string, StoryAnswer>;
   read_blanks: Record<string, StoryAnswer>;
 }) {
-  return apiRequest<StoryReadPayload, []>(memberEndpoints.saveStoryRead, [], body);
+  return apiRequest<{ saved?: boolean } & StoryReadPayload, []>(
+    memberEndpoints.saveStoryRead,
+    [],
+    body,
+  );
 }
 
 type NeighbourhoodsPayload = { city?: string; options?: Neighbourhood[] };

@@ -15,6 +15,7 @@ import {
   cer5IsUnsent,
   cer5NormalizeContact,
   cer5PillLabel,
+  cer5SendWindowPill,
   cer5StatusCopy,
   formatCer5Clock,
   sendKeyErrorMessage,
@@ -77,7 +78,7 @@ export function KeysNominate() {
     2: null,
     3: null,
   });
-  const [clock, setClock] = useState("24:00:00");
+  const [now, setNow] = useState(() => Date.now());
 
   function patchDraft(n: Slot, patch: Partial<Draft>) {
     setDrafts((cur) => ({ ...cur, [n]: { ...(cur[n] || emptyDraft()), ...patch } }));
@@ -141,19 +142,19 @@ export function KeysNominate() {
   }, []);
 
   useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const clock = useMemo(() => {
+    if (!keys.length) return "24:00:00";
     let best: number | null = null;
     keys.forEach((k) => {
       const dl = outboundClockMs(k);
-      if (dl && dl > Date.now() && (best == null || dl < best)) best = dl;
+      if (dl && dl > now && (best == null || dl < best)) best = dl;
     });
-    function paint() {
-      setClock(formatCer5Clock(best));
-    }
-    paint();
-    if (!best) return;
-    const id = window.setInterval(paint, 1000);
-    return () => window.clearInterval(id);
-  }, [keys]);
+    return formatCer5Clock(best, now);
+  }, [keys, now]);
 
   const sentCount = useMemo(
     () => keys.filter((k) => !cer5IsUnsent(k)).length,
@@ -312,7 +313,11 @@ export function KeysNominate() {
             : closed
               ? "This Key can no longer be nominated. New Keys from Philia keep their own send window."
               : "Someone who has seen you socially. Not just professionally or online.";
-          const pill = sent ? cer5PillLabel(key) : closed ? "Closed" : "Send window";
+          const pill = sent
+            ? cer5PillLabel(key)
+            : closed
+              ? "Closed"
+              : cer5SendWindowPill(key, now);
           const msg = cer5BuildMsg(draft.name, invites[n]);
           const pad = n < 10 ? `0${n}` : String(n);
           const of = total < 10 ? `0${total}` : String(total);
@@ -332,7 +337,10 @@ export function KeysNominate() {
                   <p className="cer5-acc-name">{label}</p>
                 </div>
                 <div className="cer5-acc-header-right">
-                  <div className="cer5-active-pill">
+                  <div
+                    className="cer5-active-pill"
+                    aria-label={canSend && pill.includes(":") ? `Send window ${pill} remaining` : undefined}
+                  >
                     {canSend ? (
                       <svg viewBox="0 0 24 24">
                         <circle cx="12" cy="12" r="9" />

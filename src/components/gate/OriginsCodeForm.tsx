@@ -14,6 +14,7 @@ import { GateChrome } from "@/components/gate/GateChrome";
 import { SessionHold } from "@/components/gate/SessionHold";
 import { OtpInput } from "@/components/gate/OtpInput";
 import Link from "next/link";
+import { CtaEnd, ctaStateClass } from "@/components/gate/CtaEnd";
 
 export function OriginsCodeForm() {
   const router = useRouter();
@@ -33,7 +34,8 @@ export function OriginsCodeForm() {
     setOpen(true);
   }, [router]);
 
-  const ready = code.length === 6 && !busy;
+  const filled = code.length === 6;
+  const ready = filled && !busy;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -89,9 +91,14 @@ export function OriginsCodeForm() {
         <p className="gate-error" style={{ opacity: error ? 1 : 0 }}>
           {error || " "}
         </p>
-        <button className={`gate-cta gate-cta-primary${ready ? "" : " is-wait"}`} disabled={!ready} type="submit">
-          <span>Verify email</span>
-          <span>→</span>
+        <button
+          className={`gate-cta gate-cta-primary${ctaStateClass(busy, filled)}`}
+          disabled={!ready}
+          type="submit"
+          aria-busy={busy}
+        >
+          <span>{busy ? "One moment…" : "Verify email"}</span>
+          <CtaEnd busy={busy} />
         </button>
         <Link href={routes.origins} className="gate-text-link">
           Use a different email

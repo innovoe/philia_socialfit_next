@@ -1,5 +1,7 @@
 "use client";
 
+import { isLocationPlace, type LocationPlace } from "@/lib/location";
+
 export type FieldType = "single" | "multi" | "rank";
 
 export type FieldOption = {
@@ -19,7 +21,7 @@ export type StoryField = {
 
 export type StoryKey = keyof typeof SB_FIELDS;
 
-export type StoryAnswer = string | string[];
+export type StoryAnswer = string | string[] | LocationPlace;
 export type StoryAnswers = Record<string, StoryAnswer | undefined>;
 
 export const STORY_KEYS = [
@@ -164,19 +166,19 @@ export const SB_FIELDS = {
   },
   "home": {
     "label": "I live around…",
-    "hint": "Your primary neighbourhood",
+    "hint": "Search a place. The map shows 1 km around the point, not a street door.",
     "type": "single",
     "options": []
   },
   "work": {
     "label": "I work mostly in…",
-    "hint": "Where you spend most working hours",
+    "hint": "Where you spend most working hours. Choose From home if you don’t have a separate place.",
     "type": "single",
     "options": []
   },
   "frequent": {
     "label": "I usually move around…",
-    "hint": "Your most frequent area outside home/work",
+    "hint": "A third area you move around. Choose Varies if it isn’t fixed.",
     "type": "single",
     "options": []
   },
@@ -1232,13 +1234,20 @@ export function cap(s: string) {
 }
 
 export function isFilled(v: StoryAnswer | undefined) {
-  return v != null && v !== "" && (!Array.isArray(v) || v.length > 0);
+  if (v == null || v === "") return false;
+  if (Array.isArray(v)) return v.length > 0;
+  if (typeof v === "object") return isLocationPlace(v);
+  return String(v).trim() !== "";
 }
 
 export function formatSbAnswer(answers: StoryAnswers, key: string) {
   const v = answers[key];
   if (!v) return "…";
-  if (!Array.isArray(v)) return cap(v);
+  if (isLocationPlace(v)) return cap(v.name);
+  if (!Array.isArray(v)) {
+    if (typeof v === "object") return "…";
+    return cap(v);
+  }
   if (v.length === 0) return "…";
   const join = (arr: string[]) =>
     arr.length === 1
@@ -1395,6 +1404,7 @@ export function firstIncomplete(sections: StorySection[], answers: StoryAnswers,
 
 export function leadCap(v: StoryAnswer | undefined, fallback: string) {
   if (!v) return fallback;
+  if (isLocationPlace(v)) return cap(v.name);
   const s = Array.isArray(v) ? v[0] : v;
   return s ? cap(s) : fallback;
 }

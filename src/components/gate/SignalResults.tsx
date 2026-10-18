@@ -6,6 +6,7 @@ import { routes } from "@/lib/routes";
 import { completeSignalDemo } from "@/lib/api/signal-demo";
 import { canPlaySignalDemo, RESULT_PEOPLE, RESULT_ROOMS, TAB_DESC, takeSignalReturn } from "@/lib/signal-demo";
 import { destroyAnim, playTrustGraph, type PlayGate } from "@/lib/lottie";
+import { CtaEnd } from "@/components/gate/CtaEnd";
 
 const SLOT = [
   { y: 0, scale: 1, op: 1, z: 4 },
@@ -40,6 +41,7 @@ export function SignalResults() {
   const [roomsTop, setRoomsTop] = useState(0);
   const [peopleTop, setPeopleTop] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [leaving, setLeaving] = useState(false);
   const paused = useRef(false);
   const touchY = useRef(0);
   const roomsTopRef = useRef(0);
@@ -137,10 +139,15 @@ export function SignalResults() {
   }
 
   async function leave() {
+    if (leaving) return;
+    setLeaving(true);
     try {
-      await completeSignalDemo();
+      await Promise.race([
+        completeSignalDemo().catch(() => null),
+        new Promise((resolve) => window.setTimeout(resolve, 8000)),
+      ]);
     } catch {
-      /* event write must not block the existing finish CTA */
+      /* event write must not block the finish CTA */
     }
     const back = takeSignalReturn();
     if (back) {
@@ -297,12 +304,22 @@ export function SignalResults() {
             swipes. People, not profiles.
           </p>
           <div className="res-end-line" />
-          <button className="res-cta" type="button" onClick={leave}>
-            <span>Continue with your Key</span>
-            <span>→</span>
-            <span className="res-cta-dot" />
-            <span className="res-cta-ring one" />
-            <span className="res-cta-ring two" />
+          <button
+            className={`res-cta${leaving ? " is-busy" : ""}`}
+            type="button"
+            onClick={() => void leave()}
+            disabled={leaving}
+            aria-busy={leaving}
+          >
+            <span>{leaving ? "One moment…" : "Continue with your Key"}</span>
+            <CtaEnd busy={leaving} />
+            {leaving ? null : (
+              <>
+                <span className="res-cta-dot" />
+                <span className="res-cta-ring one" />
+                <span className="res-cta-ring two" />
+              </>
+            )}
           </button>
           <p className="res-cta-sub">
             {hasAccess()

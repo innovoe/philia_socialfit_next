@@ -370,6 +370,52 @@ body {
   cursor: not-allowed;
 }
 
+.cta-spinner {
+  width: 15px;
+  height: 15px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  border: 1.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: cta-spin 0.65s linear infinite;
+}
+
+@keyframes cta-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.gate-cta.is-busy,
+.gate-cta.is-busy:disabled {
+  background: var(--black);
+  color: #fff;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.14);
+  cursor: wait;
+  transform: none;
+}
+
+.gate-cta-secondary.is-busy,
+.gate-cta-secondary.is-busy:disabled {
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--steel);
+  box-shadow: 0 1px 4px rgba(32, 32, 52, 0.05);
+}
+
+.cer-cta.is-busy,
+.cer-cta.is-busy:disabled,
+.res-cta.is-busy,
+.res-cta.is-busy:disabled {
+  cursor: wait;
+  opacity: 1;
+}
+
+.res-cta.is-busy .res-cta-dot,
+.res-cta.is-busy .res-cta-ring {
+  display: none;
+}
+
 .gate-text-link {
   display: block;
   width: 100%;
@@ -413,7 +459,7 @@ body {
   font-size: 11px;
   line-height: 1.85;
   font-weight: 300;
-  color: var(--muted);
+  color: rgba(32, 32, 52, 0.52);
 }
 
 .founder-bottom {
@@ -760,6 +806,7 @@ body {
   right: 42px;
   top: 126px;
   z-index: 35;
+  padding-top: 24px;
   opacity: 0;
   pointer-events: none;
 }

@@ -15,6 +15,7 @@ import { applyMeToSession, normalizeCeremonyStep, writeSession } from "@/lib/ses
 import { routes } from "@/lib/routes";
 import { firstIncomplete, leadCap, STORY_SECTIONS, type StoryAnswers } from "@/lib/story-data";
 import { hydrateAnswersFromServer } from "@/lib/story-answers";
+import { CtaEnd } from "@/components/gate/CtaEnd";
 
 export default function CeremonySummaryPage() {
   const [answers, setAnswers] = useState<StoryAnswers | null>(null);
@@ -173,9 +174,15 @@ export default function CeremonySummaryPage() {
           </p>
         ) : null}
         <div style={{ marginTop: 48 }}>
-          <button className="cer-cta" type="button" onClick={onContinue} disabled={busy}>
-            <span>Continue</span>
-            <span>→</span>
+          <button
+            className={`cer-cta${busy ? " is-busy" : ""}`}
+            type="button"
+            onClick={onContinue}
+            disabled={busy}
+            aria-busy={busy}
+          >
+            <span>{busy ? "One moment…" : "Continue"}</span>
+            <CtaEnd busy={busy} />
           </button>
         </div>
       </div>

@@ -112,6 +112,7 @@ export function HubPricing({
     catalyst: "annual",
   });
   const [busy, setBusy] = useState(false);
+  const [busyTier, setBusyTier] = useState<(typeof PC_ORDER)[number] | null>(null);
   const [err, setErr] = useState("");
   const fillRef = useRef<HTMLDivElement | null>(null);
   const zoneRef = useRef<HTMLDivElement | null>(null);
@@ -192,6 +193,7 @@ export function HubPricing({
     }
     setErr("");
     setBusy(true);
+    setBusyTier(tier);
     try {
       const r = await postMembershipChoice(tier, period);
       onChoice(r.membership_choice);
@@ -200,8 +202,8 @@ export function HubPricing({
       window.location.assign(routes.hubMembership);
     } catch (error) {
       setErr(membershipChoiceError(error));
-    } finally {
       setBusy(false);
+      setBusyTier(null);
     }
   }
 
@@ -268,8 +270,17 @@ export function HubPricing({
                   <div className="pc-ctx-row"><Icon d={I.star} /><span>SocialFit Signature events</span></div>
                   <div className="pc-ctx-row"><Icon d={I.door} /><span>Live member access</span></div>
                 </div>
-                <button className="pc-choose-btn" type="button" disabled={busy} onClick={(e) => choose("insider", e)}>
-                  Upgrade membership
+                <button
+                  className={`pc-choose-btn${busyTier === "insider" ? " is-busy" : ""}`}
+                  type="button"
+                  disabled={busy}
+                  onClick={(e) => choose("insider", e)}
+                  aria-busy={busyTier === "insider"}
+                >
+                  <span className="pc-choose-label">
+                    {busyTier === "insider" ? <span className="cta-spinner" aria-hidden="true" /> : null}
+                    {busyTier === "insider" ? "One moment…" : "Upgrade membership"}
+                  </span>
                 </button>
               </div>
             </div>
@@ -327,8 +338,21 @@ export function HubPricing({
                   <div className="pc-ctx-row"><Icon d={I.bars} /><span>Full SocialFit dashboard</span></div>
                 </div>
                 <span className="pc-badge">✓ &nbsp;Month 1 complimentary if 3 Keys claimed</span>
-                <button className="pc-choose-btn" type="button" disabled={busy} onClick={(e) => choose("insider", e)}>
-                  {billing.insider === "annual" ? "Choose annual" : "Choose monthly"}
+                <button
+                  className={`pc-choose-btn${busyTier === "insider" ? " is-busy" : ""}`}
+                  type="button"
+                  disabled={busy}
+                  onClick={(e) => choose("insider", e)}
+                  aria-busy={busyTier === "insider"}
+                >
+                  <span className="pc-choose-label">
+                    {busyTier === "insider" ? <span className="cta-spinner" aria-hidden="true" /> : null}
+                    {busyTier === "insider"
+                      ? "One moment…"
+                      : billing.insider === "annual"
+                        ? "Choose annual"
+                        : "Choose monthly"}
+                  </span>
                 </button>
               </div>
             </div>
@@ -378,8 +402,21 @@ export function HubPricing({
                   <div className="pc-feat-row"><Icon d={I.route} /><span>Priority routing</span></div>
                   <div className="pc-feat-row"><Icon d={I.bars} /><span>Full SocialFit dashboard</span></div>
                 </div>
-                <button className="pc-choose-btn" type="button" disabled={busy} onClick={(e) => choose("catalyst", e)}>
-                  {billing.catalyst === "annual" ? "Choose annual" : "Choose monthly"}
+                <button
+                  className={`pc-choose-btn${busyTier === "catalyst" ? " is-busy" : ""}`}
+                  type="button"
+                  disabled={busy}
+                  onClick={(e) => choose("catalyst", e)}
+                  aria-busy={busyTier === "catalyst"}
+                >
+                  <span className="pc-choose-label">
+                    {busyTier === "catalyst" ? <span className="cta-spinner" aria-hidden="true" /> : null}
+                    {busyTier === "catalyst"
+                      ? "One moment…"
+                      : billing.catalyst === "annual"
+                        ? "Choose annual"
+                        : "Choose monthly"}
+                  </span>
                 </button>
               </div>
             </div>

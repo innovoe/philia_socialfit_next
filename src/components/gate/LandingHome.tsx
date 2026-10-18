@@ -11,6 +11,7 @@ import { looksLikeInviteQuery, queryKeyCode, stashKeyValidate } from "@/lib/invi
 import { isHubReady, resumeMember } from "@/lib/resume";
 import { applyMeToSession, hasAccess } from "@/lib/session";
 import { routes } from "@/lib/routes";
+import { CtaEnd, ctaStateClass } from "@/components/gate/CtaEnd";
 
 type Door = "hold" | "guest" | "hub" | "onboarding";
 
@@ -132,13 +133,14 @@ export function LandingHome() {
               Pick up where you left off.
             </p>
             <button
-              className="gate-cta gate-cta-primary gate-cta-long"
+              className={`gate-cta gate-cta-primary gate-cta-long${ctaStateClass(busy, !!me)}`}
               type="button"
               disabled={busy || !me}
               onClick={() => void onContinue()}
+              aria-busy={busy}
             >
               <span>{busy ? "One moment…" : "Continue your onboarding"}</span>
-              <span>→</span>
+              <CtaEnd busy={busy} />
             </button>
           </>
         ) : door === "guest" ? (

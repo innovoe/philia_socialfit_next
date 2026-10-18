@@ -18,6 +18,7 @@ import { resumeMember } from "@/lib/resume";
 import { routes } from "@/lib/routes";
 import { OtpInput } from "@/components/gate/OtpInput";
 import { SessionHold } from "@/components/gate/SessionHold";
+import { CtaEnd, ctaStateClass } from "@/components/gate/CtaEnd";
 
 function errorCode(err: unknown) {
   if (isApiError(err)) return err.code;
@@ -111,9 +112,12 @@ export function VerifyForm() {
   }, []);
 
   const phone = normalizeUaePhone(`+971${localPhone}`);
-  const canSend = !!phone && ageOk && !busy;
-  const canContinue = ageOk && !busy;
-  const canVerify = code.length === 6 && !busy;
+  const sendReady = !!phone && ageOk;
+  const continueReady = ageOk;
+  const verifyReady = code.length === 6;
+  const canSend = sendReady && !busy;
+  const canContinue = continueReady && !busy;
+  const canVerify = verifyReady && !busy;
 
   function onPhoneChange(value: string) {
     setLocalPhone(sanitizeUaeLocalInput(value));
@@ -366,12 +370,13 @@ export function VerifyForm() {
             <span className="verify-age-text">I&apos;m over 18 years old.</span>
           </label>
           <button
-            className={`gate-cta gate-cta-primary${canContinue ? "" : " is-wait"}`}
+            className={`gate-cta gate-cta-primary${ctaStateClass(busy, continueReady)}`}
             disabled={!canContinue}
             type="submit"
+            aria-busy={busy}
           >
             <span>{busy ? "Continuing…" : "Continue"}</span>
-            <span>→</span>
+            <CtaEnd busy={busy} />
           </button>
           <p className="verify-legal">
             By clicking the “Continue” button you are agreeing with our{" "}
@@ -460,12 +465,13 @@ export function VerifyForm() {
             <span className="verify-age-text">I&apos;m over 18 years old.</span>
           </label>
           <button
-            className={`gate-cta gate-cta-primary${canSend ? "" : " is-wait"}`}
+            className={`gate-cta gate-cta-primary${ctaStateClass(busy, sendReady)}`}
             disabled={!canSend}
             type="submit"
+            aria-busy={busy}
           >
             <span>{busy ? "Sending…" : "Send code"}</span>
-            <span>→</span>
+            <CtaEnd busy={busy} />
           </button>
           <p className="verify-legal">
             By clicking the “Send code” button you are agreeing with our{" "}
@@ -511,13 +517,14 @@ export function VerifyForm() {
             </Link>
           ) : null}
           <button
-            className={`gate-cta gate-cta-primary${canVerify ? "" : " is-wait"}`}
+            className={`gate-cta gate-cta-primary${ctaStateClass(busy, verifyReady)}`}
             disabled={!canVerify}
             type="submit"
             style={{ marginTop: 8 }}
+            aria-busy={busy}
           >
-            <span>Verify and continue</span>
-            <span>→</span>
+            <span>{busy ? "Verifying…" : "Verify and continue"}</span>
+            <CtaEnd busy={busy} />
           </button>
         </form>
       )}

@@ -1,4 +1,4 @@
-import type { OutboundKey } from "@/lib/api/keys";
+import { outboundClockMs, type OutboundKey } from "@/lib/api/keys";
 import { normalizeUaePhone } from "@/lib/api/phone";
 
 export type KeyInvite = {
@@ -112,13 +112,19 @@ export function sendKeyErrorMessage(code: string) {
   return "Could not send — check contact and try again.";
 }
 
-export function formatCer5Clock(ms: number | null) {
+export function formatCer5Clock(ms: number | null, now = Date.now()) {
   if (ms == null) return "——:——:——";
-  const diff = Math.max(0, ms - Date.now());
+  const diff = Math.max(0, ms - now);
   const h = Math.floor(diff / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
   const s = Math.floor((diff % 60000) / 1000);
   return `${h < 10 ? "0" : ""}${h}:${m < 10 ? "0" : ""}${m}:${s < 10 ? "0" : ""}${s}`;
+}
+
+export function cer5SendWindowPill(k?: OutboundKey | null, now = Date.now()) {
+  const dl = outboundClockMs(k);
+  if (!dl) return "Send window";
+  return formatCer5Clock(dl, now);
 }
 
 export function sentStatusLine(sent: number) {

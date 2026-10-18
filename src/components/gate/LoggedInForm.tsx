@@ -7,6 +7,7 @@ import { memberSavedName } from "@/lib/identity";
 import { clearLiveSession, safeNextPath } from "@/lib/live-session";
 import { resumeMember } from "@/lib/resume";
 import { applyMeToSession, hasAccess } from "@/lib/session";
+import { CtaEnd } from "@/components/gate/CtaEnd";
 
 export function LoggedInForm() {
   const [name, setName] = useState("");
@@ -68,22 +69,24 @@ export function LoggedInForm() {
       <h1 className="verify-head logged-in-name">{name}</h1>
       <p className="verify-sub">Want to log out?</p>
       <button
-        className="gate-cta gate-cta-primary"
+        className={`gate-cta gate-cta-primary${busy === "out" ? " is-busy" : ""}`}
         type="button"
         disabled={!!busy}
         onClick={onLogout}
+        aria-busy={busy === "out"}
       >
         <span>{busy === "out" ? "One moment…" : "Log out"}</span>
-        <span>→</span>
+        <CtaEnd busy={busy === "out"} />
       </button>
       <button
-        className="gate-cta gate-cta-secondary"
+        className={`gate-cta gate-cta-secondary${busy === "stay" ? " is-busy" : ""}`}
         type="button"
         disabled={!!busy}
         onClick={() => void onStay()}
+        aria-busy={busy === "stay"}
       >
         <span>{busy === "stay" ? "One moment…" : "No"}</span>
-        <span />
+        <CtaEnd busy={busy === "stay"} />
       </button>
     </main>
   );

@@ -1,7 +1,9 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { saveStoryRead, getStoryRead } from "@/lib/api/story";
 import { isDeadAccessError } from "@/lib/expire";
+import { locationSaveLine, toLocationPlace } from "@/lib/location";
 import { hasAccess, readSession } from "@/lib/session";
 import {
   READ_KEYS,
@@ -17,15 +19,46 @@ import { routes } from "@/lib/routes";
 const ANSWERS_KEY = "philia_answers";
 const EMAIL_KEY = "philia_answers_email";
 
+const EMPTY_ANSWERS: StoryAnswers = {};
+const answerListeners = new Set<() => void>();
+
 let memoryAnswers: StoryAnswers | null = null;
 let serverHydrated = false;
 let hydrateInFlight: Promise<StoryAnswers> | null = null;
 
+function emitAnswers() {
+  answerListeners.forEach((fn) => fn());
+}
+
+export function subscribeAnswers(onStoreChange: () => void) {
+  answerListeners.add(onStoreChange);
+  return () => {
+    answerListeners.delete(onStoreChange);
+  };
+}
+
+export function getAnswersSnapshot() {
+  return loadAnswers();
+}
+
+export function getAnswersServerSnapshot() {
+  return EMPTY_ANSWERS;
+}
+
+export function useStoryAnswers() {
+  return useSyncExternalStore(
+    subscribeAnswers,
+    getAnswersSnapshot,
+    getAnswersServerSnapshot,
+  );
+}
+
 export function loadAnswers(): StoryAnswers {
   if (memoryAnswers) return memoryAnswers;
+  if (typeof window === "undefined") return EMPTY_ANSWERS;
   try {
     const raw = localStorage.getItem(ANSWERS_KEY);
-    memoryAnswers = raw ? (JSON.parse(raw) as StoryAnswers) : {};
+    memoryAnswers = coerceAnswers(raw ? (JSON.parse(raw) as unknown) : {});
     return memoryAnswers;
   } catch {
     memoryAnswers = {};
@@ -42,6 +75,7 @@ export function writeAnswers(answers: StoryAnswers) {
   } catch {
     /* private mode */
   }
+  emitAnswers();
 }
 
 export function persistAnswers(answers: StoryAnswers) {
@@ -50,16 +84,19 @@ export function persistAnswers(answers: StoryAnswers) {
   const story_blanks: Record<string, StoryAnswer> = {};
   const read_blanks: Record<string, StoryAnswer> = {};
   STORY_KEYS.forEach((k) => {
-    if (answers[k] != null) story_blanks[k] = answers[k] as StoryAnswer;
+    const next = persistBlank(answers[k]);
+    if (next != null) story_blanks[k] = next;
   });
   READ_KEYS.forEach((k) => {
-    if (answers[k] != null) read_blanks[k] = answers[k] as StoryAnswer;
+    const next = persistBlank(answers[k]);
+    if (next != null) read_blanks[k] = next;
   });
   saveStoryRead({ story_blanks, read_blanks }).catch((err) => {
     if (isDeadAccessError(err)) return;
     const note = document.getElementById("storySaveNote") ?? document.createElement("div");
     note.id = "storySaveNote";
-    note.textContent = "Couldn’t sync answers — saved on this device only.";
+    note.textContent =
+      locationSaveLine(err) || "Couldn’t sync answers — saved on this device only.";
     note.style.cssText =
       "position:fixed;left:50%;bottom:88px;transform:translateX(-50%);z-index:80;padding:10px 14px;border-radius:999px;background:rgba(32,32,52,.88);color:#fff;font:500 11px/1.3 Inter,sans-serif;opacity:1;transition:opacity .25s;pointer-events:none;max-width:86vw;text-align:center";
     if (!note.parentNode) document.body.appendChild(note);
@@ -76,8 +113,10 @@ export async function hydrateAnswersFromServer() {
   hydrateInFlight = (async () => {
     try {
       const r = await getStoryRead();
-      const next: StoryAnswers = {};
-      Object.assign(next, r.story_blanks || {}, r.read_blanks || {});
+      const next = coerceAnswers({
+        ...(r.story_blanks || {}),
+        ...(r.read_blanks || {}),
+      });
       writeAnswers(next);
       serverHydrated = true;
       return next;
@@ -117,6 +156,31 @@ export function readComplete(answers: StoryAnswers) {
   return firstIncomplete(READ_SECTIONS, answers) == null;
 }
 
+function persistBlank(v: StoryAnswer | undefined): StoryAnswer | undefined {
+  if (v == null) return undefined;
+  if (typeof v === "string") return v;
+  if (Array.isArray(v)) return v;
+  const place = toLocationPlace(v);
+  return place ?? undefined;
+}
+
+function coerceAnswers(raw: unknown): StoryAnswers {
+  if (!raw || typeof raw !== "object") return {};
+  const next: StoryAnswers = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    const a = coerceStoryAnswer(v);
+    if (a !== undefined) next[k] = a;
+  }
+  return next;
+}
+
+function coerceStoryAnswer(v: unknown): StoryAnswer | undefined {
+  if (v == null) return undefined;
+  if (typeof v === "string") return v;
+  if (Array.isArray(v)) return v.map((item) => String(item));
+  return toLocationPlace(v) ?? undefined;
+}
+
 export function clearStoryProgress() {
   memoryAnswers = null;
   serverHydrated = false;
@@ -127,4 +191,5 @@ export function clearStoryProgress() {
   } catch {
     /* private mode */
   }
+  emitAnswers();
 }

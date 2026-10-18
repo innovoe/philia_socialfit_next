@@ -15,6 +15,7 @@ import {
 } from "@/lib/invite";
 import { readSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
+import { CtaEnd } from "@/components/gate/CtaEnd";
 
 function errorCode(err: unknown) {
   if (isApiError(err)) return err.code;
@@ -65,7 +66,8 @@ export function InviteLanding() {
     };
   }, [queryCode, queryFrom]);
 
-  const ready = normaliseKeyCode(code).length >= 4 && !busy;
+  const filled = normaliseKeyCode(code).length >= 4;
+  const ready = filled && !busy;
 
   async function onOpen(e: React.FormEvent) {
     e.preventDefault();
@@ -166,9 +168,14 @@ export function InviteLanding() {
                 {error || "Invalid code — check and try again"}
               </p>
             </div>
-            <button className="inv-cta" type="submit" disabled={!ready}>
+            <button
+              className={`inv-cta${busy ? " is-busy" : ""}`}
+              type="submit"
+              disabled={!ready}
+              aria-busy={busy}
+            >
               <span>{busy ? "Checking…" : "Open your Key"}</span>
-              <span>→</span>
+              <CtaEnd busy={busy} />
             </button>
           </form>
           <p className="inv-micro">Private invitation · 48 hours to begin your Social Mirror</p>

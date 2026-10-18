@@ -9,6 +9,7 @@ import { hasFounderToken, readSession, writeSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { GateChrome } from "@/components/gate/GateChrome";
 import { SessionHold } from "@/components/gate/SessionHold";
+import { CtaEnd, ctaStateClass } from "@/components/gate/CtaEnd";
 
 export function OriginsClaimForm() {
   const router = useRouter();
@@ -85,9 +86,14 @@ export function OriginsClaimForm() {
         <p className="gate-error" style={{ opacity: error ? 1 : 0 }}>
           {error || " "}
         </p>
-        <button className={`gate-cta gate-cta-primary${busy ? " is-wait" : ""}`} disabled={busy} type="submit">
-          <span>Claim my key</span>
-          <span>→</span>
+        <button
+          className={`gate-cta gate-cta-primary${ctaStateClass(busy)}`}
+          disabled={busy}
+          type="submit"
+          aria-busy={busy}
+        >
+          <span>{busy ? "One moment…" : "Claim my key"}</span>
+          <CtaEnd busy={busy} />
         </button>
       </form>
     </GateChrome>

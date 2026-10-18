@@ -30,6 +30,10 @@
 #sInvite .inv-cta:active{box-shadow:0 6px 16px rgba(0,0,0,.10);transform:scale(.985)}
 #sInvite .inv-cta:disabled{cursor:not-allowed;background:#D9D9DE;color:rgba(32,32,52,.30);box-shadow:none}
 #sInvite .inv-cta:disabled:active{transform:none}
+#sInvite .inv-cta.is-busy,
+#sInvite .inv-cta.is-busy:disabled{background:var(--black);color:#fff;box-shadow:0 14px 32px rgba(0,0,0,.14);cursor:wait}
+#sPrimer .inv-start-btn.is-busy,
+#sPrimer .inv-start-btn.is-busy:disabled{cursor:wait;opacity:1}
 #sInvite .inv-micro{margin:16px 0 0;text-align:center;font-family:Montserrat,sans-serif;font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;color:rgba(32,32,52,.24)}
 
 #sMirror{min-height:100vh;background:var(--porcelain);box-shadow:0 0 60px rgba(0,0,0,.12);overflow-y:auto;overflow-x:hidden}

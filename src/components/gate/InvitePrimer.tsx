@@ -16,6 +16,7 @@ import {
 import { hasAccess, readSession } from "@/lib/session";
 import { resumeMember } from "@/lib/resume";
 import { routes } from "@/lib/routes";
+import { CtaEnd } from "@/components/gate/CtaEnd";
 
 function errorCode(err: unknown) {
   if (isApiError(err)) return err.code;
@@ -357,9 +358,15 @@ export function InvitePrimer() {
               {error}
             </p>
           ) : null}
-          <button className="inv-start-btn" type="button" onClick={onStart} disabled={busy}>
+          <button
+            className={`inv-start-btn${busy ? " is-busy" : ""}`}
+            type="button"
+            onClick={onStart}
+            disabled={busy}
+            aria-busy={busy}
+          >
             <span>{busy ? "Claiming…" : "Start SocialFit"}</span>
-            <span>→</span>
+            <CtaEnd busy={busy} />
           </button>
           {errorCodeName === "own_key" || errorCodeName === "claim_failed" ? (
             <button
