@@ -11,7 +11,7 @@ import {
   MIRROR_ARCHETYPES,
   normaliseKeyCode,
 } from "@/lib/invite";
-import { readSession, writeSession } from "@/lib/session";
+import { hasAccess, readSession, writeSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 
 function errorCode(err: unknown) {
@@ -38,6 +38,10 @@ export function InviteMirror() {
     const s = readSession();
     if (!isInviteSession() || s.keyId == null) {
       window.location.replace(routes.invite);
+      return;
+    }
+    if (!hasAccess()) {
+      window.location.replace(routes.verify);
       return;
     }
     if (s.mirrorAnswered) {

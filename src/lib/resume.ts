@@ -1,10 +1,11 @@
 "use client";
 
 import type { Me } from "@/lib/api/member";
-import { applyMeToSession, normalizeCeremonyStep } from "@/lib/session";
+import { applyMeToSession, normalizeCeremonyStep, readSession } from "@/lib/session";
 import { ceremonyUrlForStep, persistCeremonyStep } from "@/lib/ceremony";
 import { computeResume, hydrateAnswersFromServer, resumeUrl } from "@/lib/story-answers";
 import { isFilled, type StoryAnswers } from "@/lib/story-data";
+import { inviteContinueHref, isInviteSession } from "@/lib/invite";
 import { routes } from "@/lib/routes";
 
 export function isHubReady(me: Me | null | undefined) {
@@ -35,6 +36,10 @@ export async function resumeMember(me: Me) {
     return;
   }
   if (me.has_claimed_key === false) {
+    if (isInviteSession() && readSession().keyId != null) {
+      window.location.replace(inviteContinueHref());
+      return;
+    }
     window.location.replace(routes.unlock);
     return;
   }

@@ -1,4 +1,5 @@
 import { apiRequest } from "@/lib/api/client";
+import { isApiError } from "@/lib/api/errors";
 import { publicEndpoints } from "@/lib/api/endpoints";
 import { hasAccess } from "@/lib/session";
 
@@ -21,6 +22,19 @@ export type FounderClaimKey = {
   phone_mask?: string;
 };
 
+export type FounderKeyExpired = {
+  canRequest: boolean;
+  requested: boolean;
+  issuesAt: string | null;
+};
+
+export type FounderKeyRequest = {
+  ok?: boolean;
+  requested?: boolean;
+  already?: boolean;
+  issues_at?: string | null;
+};
+
 export function founderEmailStart(email: string) {
   return apiRequest<FounderEmailStart, []>(
     publicEndpoints.founderEmailStart,
@@ -37,15 +51,49 @@ export function founderEmailVerify(email: string, code: string) {
   );
 }
 
-export function founderClaimKey(founderToken?: string | null) {
+function founderTokenBody(founderToken?: string | null) {
   const body: Record<string, string> = {};
   if (founderToken) body.founder_token = founderToken;
+  return body;
+}
+
+function founderAuth() {
+  return hasAccess() ? { auth: true } : {};
+}
+
+export function founderClaimKey(founderToken?: string | null) {
   return apiRequest<FounderClaimKey, []>(
     publicEndpoints.founderClaimKey,
     [],
-    body,
-    hasAccess() ? { auth: true } : {},
+    founderTokenBody(founderToken),
+    founderAuth(),
   );
+}
+
+export function founderRequestKey(founderToken?: string | null) {
+  return apiRequest<FounderKeyRequest, []>(
+    publicEndpoints.founderRequestKey,
+    [],
+    founderTokenBody(founderToken),
+    founderAuth(),
+  );
+}
+
+export function readFounderKeyExpired(err: unknown): FounderKeyExpired | null {
+  if (!isApiError(err) || err.code !== "founder_key_expired") return null;
+  const data = err.data && typeof err.data === "object" ? (err.data as Record<string, unknown>) : {};
+  return {
+    canRequest: data.can_request === true,
+    requested: data.requested === true,
+    issuesAt: typeof data.issues_at === "string" && data.issues_at.trim() ? data.issues_at : null,
+  };
+}
+
+export function formatFounderKeyIssueAt(iso: string | null | undefined) {
+  if (!iso) return "";
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return "";
+  return new Date(t).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
 
 export function readClaimPhone(result: FounderClaimKey | null | undefined) {
@@ -78,6 +126,10 @@ export function mapOriginsError(code: string) {
   if (code === "email_taken") return "This email is already taken.";
   if (code === "already_member") return "You're already on SocialFit. Log in instead.";
   if (code === "key_expired") return "That Key window closed. Claim a Key again.";
+  if (code === "founder_key_expired") {
+    return "Your Founder Key window closed after 24 hours.";
+  }
+  if (code === "key_not_expired") return "Your Founder Key is still open — claim it instead.";
   return "Could not continue — try again.";
 }
 

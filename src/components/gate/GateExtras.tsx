@@ -59,7 +59,12 @@ export function GateExtras() {
         onAskOpen={() => setAskOpen(true)}
         onAskClose={() => setAskOpen(false)}
       />
-      <AskPhilia open={askOpen} explorerReady={explorerReady} onClose={() => setAskOpen(false)} />
+      <AskPhilia
+        open={askOpen}
+        explorerReady={explorerReady}
+        hubUnlocked={hubUnlocked}
+        onClose={() => setAskOpen(false)}
+      />
     </>
   );
 }

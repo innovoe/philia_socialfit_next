@@ -75,6 +75,12 @@ export const publicEndpoints = {
     "founderClaimKey",
     () => "/origins/founder/claim-key/",
   ),
+  founderRequestKey: socialfit(
+    "POST",
+    false,
+    "founderRequestKey",
+    () => "/origins/founder/key/request/",
+  ),
   sendOtp: socialfit("POST", false, "sendOtp", () => "/auth/otp/send/"),
   verifyOtp: socialfit("POST", false, "verifyOtp", () => "/auth/otp/verify/"),
   completeSignalDemo: socialfit(

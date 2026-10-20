@@ -14,6 +14,7 @@ export {
   founderClaimKey,
   founderEmailStart,
   founderEmailVerify,
+  founderRequestKey,
   isValidEmail,
   mapOriginsError,
   readClaimPhone,

@@ -3,7 +3,7 @@
 import { claimKey, getMe, type ClaimKeyResult, type Me } from "@/lib/api/member";
 import type { KeyValidate } from "@/lib/api/key-entry";
 import { isInvitePayload } from "@/lib/api/key-entry";
-import { readSession, writeSession, type EntryPath } from "@/lib/session";
+import { hasAccess, readSession, writeSession, type EntryPath } from "@/lib/session";
 import { routes } from "@/lib/routes";
 
 export const MIRROR_ARCHETYPES = [
@@ -176,9 +176,8 @@ export function stashKeyValidate(r: KeyValidate, code: string) {
   });
 }
 
-export function afterInviteValidate(r: KeyValidate) {
-  if (r.mirror_answered || r.mirror_status === "answered") return routes.invitePrimer;
-  return routes.inviteMirror;
+export function afterInviteValidate(_r?: KeyValidate) {
+  return inviteContinueHref();
 }
 
 export function isInviteSession() {
@@ -192,6 +191,7 @@ export function inviteOwnerName() {
 }
 
 export function inviteContinueHref() {
+  if (!hasAccess()) return routes.verify;
   return readSession().mirrorAnswered ? routes.invitePrimer : routes.inviteMirror;
 }
 

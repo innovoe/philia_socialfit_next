@@ -4,7 +4,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { videos } from "@/lib/assets";
 import { isInvitePayload, validateKeyCode } from "@/lib/api/key-entry";
-import { founderClaimKey, mapOriginsError, readClaimPhone } from "@/lib/api/origins";
+import {
+  founderClaimKey,
+  founderRequestKey,
+  mapOriginsError,
+  readClaimPhone,
+  readFounderKeyExpired,
+  type FounderKeyExpired,
+} from "@/lib/api/origins";
+import { FounderKeyReissue } from "@/components/gate/FounderKeyReissue";
 import { contactsAlreadyVerified, getMe } from "@/lib/api/member";
 import { maskPhone } from "@/lib/api/phone";
 import { readApiRefusal, refusalGoesToLogin, refusalLine } from "@/lib/api/errors";
@@ -23,6 +31,7 @@ export function UnlockForm() {
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
   const [claimMode, setClaimMode] = useState(false);
+  const [expired, setExpired] = useState<FounderKeyExpired | null>(null);
 
   useEffect(() => {
     if (bounceIfLiveSession({ onlyIfClaimed: true })) return;
@@ -89,6 +98,45 @@ export function UnlockForm() {
       if (isSessionExpiring()) return;
       if (refusalGoesToLogin(err)) {
         window.location.replace(routes.login);
+        return;
+      }
+      const stale = readFounderKeyExpired(err);
+      if (stale && (stale.canRequest || stale.requested)) {
+        setExpired(stale);
+        setError("");
+        setBusy(false);
+        return;
+      }
+      setError(refusalLine(err, mapOriginsError));
+      setBusy(false);
+    }
+  }
+
+  async function onRequestKey() {
+    setError("");
+    setBusy(true);
+    try {
+      const result = await founderRequestKey(readSession().founderToken);
+      setExpired({
+        canRequest: false,
+        requested: true,
+        issuesAt: result.issues_at || expired?.issuesAt || null,
+      });
+      setBusy(false);
+    } catch (err) {
+      if (isSessionExpiring()) return;
+      const { code } = readApiRefusal(err);
+      if (code === "key_not_expired") {
+        setExpired(null);
+        setError(refusalLine(err, mapOriginsError));
+        setBusy(false);
+        return;
+      }
+      const stale = readFounderKeyExpired(err);
+      if (stale && (stale.canRequest || stale.requested)) {
+        setExpired(stale);
+        setError("");
+        setBusy(false);
         return;
       }
       setError(refusalLine(err, mapOriginsError));
@@ -158,6 +206,22 @@ export function UnlockForm() {
       </section>
       <section className="gate-entry">
         {claimMode ? (
+          expired && (expired.canRequest || expired.requested) ? (
+            <>
+              <p className="gate-copy">
+                {expired.canRequest
+                  ? "Your Founder Key window closed after 24 hours."
+                  : "A new Founder Key is being prepared."}
+              </p>
+              <FounderKeyReissue
+                canRequest={expired.canRequest}
+                issuesAt={expired.issuesAt}
+                busy={busy}
+                error={error}
+                onRequest={() => void onRequestKey()}
+              />
+            </>
+          ) : (
           <>
             <p className="gate-copy">
               Your Key is ready to claim.
@@ -178,6 +242,7 @@ export function UnlockForm() {
               <CtaEnd busy={busy} />
             </button>
           </>
+          )
         ) : (
           <>
             <p className="gate-copy">

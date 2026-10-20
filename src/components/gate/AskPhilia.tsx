@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import {
   CAT_LABELS,
   FALLBACK_CHIPS,
@@ -20,14 +21,33 @@ import {
   type TicketState,
 } from "@/lib/ask-philia";
 import { askErrorLine, askSocialfit, htmlToAskText, type AskMessage } from "@/lib/api/ask";
+import { routes } from "@/lib/routes";
 
 type Msg = { id: number; html: string; user: boolean; plain?: boolean; error?: boolean };
 
 type AskPhiliaProps = {
   open: boolean;
   explorerReady?: boolean;
+  hubUnlocked?: boolean;
   onClose: () => void;
 };
+
+function askOnboardingReturnLabel(path: string, hubUnlocked: boolean) {
+  if (hubUnlocked || path.startsWith(routes.hub) || path.startsWith(routes.profile)) return null;
+  if (path.startsWith(routes.story)) return "Go back to your Story";
+  if (path.startsWith(routes.read)) return "Go back to your Signal Read";
+  if (path.startsWith(routes.ceremonyKeys)) return "Go back to your Keys";
+  if (path.startsWith(routes.ceremonyMirror)) return "Go back to your Social Mirror";
+  if (
+    path.startsWith(routes.ceremonyId) ||
+    path === routes.id ||
+    path.startsWith(`${routes.id}/`)
+  ) {
+    return "Go back to your Philia ID";
+  }
+  if (path.startsWith(routes.ceremony)) return "Go back to your self-read";
+  return null;
+}
 
 function Typing() {
   return (
@@ -39,7 +59,14 @@ function Typing() {
   );
 }
 
-export function AskPhilia({ open, explorerReady = false, onClose }: AskPhiliaProps) {
+export function AskPhilia({
+  open,
+  explorerReady = false,
+  hubUnlocked = false,
+  onClose,
+}: AskPhiliaProps) {
+  const path = usePathname();
+  const resumeLabel = askOnboardingReturnLabel(path, hubUnlocked);
   const [inChat, setInChat] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [chips, setChips] = useState<string[] | null>(null);
@@ -448,6 +475,13 @@ export function AskPhilia({ open, explorerReady = false, onClose }: AskPhiliaPro
           </button>
         ))}
       </div>
+
+      {resumeLabel ? (
+        <button className="ap-resume" type="button" onClick={onClose}>
+          <span>{resumeLabel}</span>
+          <span aria-hidden="true">→</span>
+        </button>
+      ) : null}
 
       <div className="ap-input-row">
         <input

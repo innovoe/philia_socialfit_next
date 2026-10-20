@@ -2,24 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getMe } from "@/lib/api/member";
 import { isValidEmail } from "@/lib/api/origins";
 import { mapOtpError, readOtpSend, sendOtp, verifyOtp } from "@/lib/api/otp";
 import { normalizeUaePhone, sanitizeUaeLocalInput } from "@/lib/api/phone";
-import { isApiError, readApiRefusal, refusalGoesToLogin, refusalLine } from "@/lib/api/errors";
-import { claimInviteKey, isInviteSession } from "@/lib/invite";
+import { readApiRefusal, refusalGoesToLogin, refusalLine } from "@/lib/api/errors";
+import { inviteContinueHref, isInviteSession } from "@/lib/invite";
 import { hasAccess, readSession, writeSession } from "@/lib/session";
 import { clearStoryProgress } from "@/lib/story-answers";
-import { resumeMember } from "@/lib/resume";
 import { routes } from "@/lib/routes";
 import { OtpInput } from "@/components/gate/OtpInput";
 import { CtaEnd, ctaStateClass } from "@/components/gate/CtaEnd";
-
-function errorCode(err: unknown) {
-  if (isApiError(err)) return err.code;
-  if (err instanceof Error) return err.message;
-  return "";
-}
 
 export function InviteVerifyForm() {
   const [email, setEmail] = useState("");
@@ -37,13 +29,13 @@ export function InviteVerifyForm() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (hasAccess()) {
-      window.location.replace(routes.verified);
-      return;
-    }
     const s = readSession();
     if (!isInviteSession() || s.keyId == null) {
       window.location.replace(routes.invite);
+      return;
+    }
+    if (hasAccess()) {
+      window.location.replace(inviteContinueHref());
       return;
     }
     setEmail(s.email || s.founderEmail || "");
@@ -137,35 +129,7 @@ export function InviteVerifyForm() {
         founderEmail: nextEmail,
         entryPath: "invite",
       });
-      try {
-        const { me } = await claimInviteKey(tokens.access);
-        if (me && me.needs_onboarding === false) {
-          await resumeMember(me);
-          return;
-        }
-        window.location.assign(routes.verified);
-      } catch (err) {
-        const claimCode = errorCode(err);
-        if (claimCode === "already_member") {
-          try {
-            const me = await getMe(tokens.access);
-            await resumeMember(me);
-          } catch {
-            window.location.replace(routes.login);
-          }
-          return;
-        }
-        if (
-          claimCode === "already_claimed" ||
-          claimCode === "key_already_claimed" ||
-          claimCode === "claimed"
-        ) {
-          window.location.assign(routes.verified);
-          return;
-        }
-        setError(refusalLine(err, mapOtpError));
-        setBusy(false);
-      }
+      window.location.assign(inviteContinueHref());
     } catch (err) {
       showOtpRefusal(err, true);
     }
