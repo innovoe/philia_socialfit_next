@@ -1,4 +1,4 @@
-import { outboundClockMs, type OutboundKey } from "@/lib/api/keys";
+import { keyMirrorAnswered, outboundClockMs, type OutboundKey } from "@/lib/api/keys";
 import { normalizeUaePhone } from "@/lib/api/phone";
 
 export type KeyInvite = {
@@ -54,10 +54,7 @@ export function cer5IsUnsent(k?: OutboundKey | null) {
 export function cer5PillLabel(k?: OutboundKey | null) {
   const state = String((k && (k.state || k.status)) || "sent").toLowerCase();
   if (state === "activated") return "Activated";
-  if (
-    state === "answered" ||
-    (k && (k.mirror_answered || String(k.mirror_status || "") === "answered"))
-  ) {
+  if (state === "answered" || keyMirrorAnswered(k)) {
     return "Answered";
   }
   if (state === "claimed") return "Claimed";
@@ -70,10 +67,7 @@ export function cer5StatusCopy(k?: OutboundKey | null) {
   if (state === "activated") {
     return arch ? `Activated. They see you as ${arch}.` : "This Key is activated.";
   }
-  if (
-    state === "answered" ||
-    (k && (k.mirror_answered || String(k.mirror_status || "") === "answered"))
-  ) {
+  if (state === "answered" || keyMirrorAnswered(k)) {
     return arch ? `Answered. They see you as ${arch}.` : "Your nominee has answered.";
   }
   if (state === "claimed") return "Claimed. Waiting on their Social Mirror.";

@@ -51,7 +51,8 @@ export function InvitePrimer() {
   useEffect(() => {
     if (!ready) return;
     function tick() {
-      setClock(formatClaimClock(readSession().claimDeadline));
+      const s = readSession();
+      setClock(formatClaimClock(s.finishDeadline || s.claimDeadline));
     }
     tick();
     const id = window.setInterval(tick, 1000);
@@ -301,54 +302,50 @@ export function InvitePrimer() {
             </div>
           </div>
           <div className="inv-key-card">
-            <p className="inv-key-card-label">Your Key is now in play</p>
+            <p className="inv-key-card-label">Your Key is claimed</p>
             <p className="inv-key-card-p">
-              You can finish your SocialFit onboarding in about <strong>30 minutes</strong> if you
-              want to keep going. But life has commitments, so we give you breathing room.
-            </p>
-            <p className="inv-key-card-p">
-              Onboarding unfolds through <strong>three timed stages</strong>. Accepting this Key has
-              a <strong>48-hour window</strong>. After that, Story and sending Keys each get a fresh
-              24-hour clock.
+              You can complete your SocialFit onboarding in about <strong>15 minutes</strong>. You
+              now have 24 hours to build your story and generate your Philia ID, followed by another
+              24 hours to send your Keys.
             </p>
             <div className="inv-stage-map" aria-label="Three-stage SocialFit onboarding">
-              <div className="inv-stage-item">
+              <div className="inv-stage-item is-done">
                 <div className="inv-stage-num">01</div>
                 <div>
-                  <p className="inv-stage-name">Enter</p>
-                  <p className="inv-stage-sub">Meet SocialFit and complete UAE mobile OTP verification.</p>
-                  <span className="inv-stage-now">Your stage now</span>
+                  <p className="inv-stage-name">Claim your Key — Done ✓</p>
+                  <p className="inv-stage-sub">Your mobile is verified and your Key is claimed.</p>
                 </div>
-                <div className="inv-stage-limit">48 hrs</div>
               </div>
               <div className="inv-stage-item">
                 <div className="inv-stage-num">02</div>
                 <div>
-                  <p className="inv-stage-name">Build</p>
-                  <p className="inv-stage-sub">Build your social story.</p>
+                  <p className="inv-stage-name">Build your story</p>
+                  <p className="inv-stage-sub">
+                    Complete your StoryBuilder to generate your Philia ID and claim Explorer.
+                  </p>
+                  <span className="inv-stage-now">Your stage now</span>
                 </div>
                 <div className="inv-stage-limit">24 hrs</div>
               </div>
               <div className="inv-stage-item">
                 <div className="inv-stage-num">03</div>
                 <div>
-                  <p className="inv-stage-name">Become visible</p>
-                  <p className="inv-stage-sub">Your Philia ID comes into focus.</p>
+                  <p className="inv-stage-name">Send your Keys</p>
+                  <p className="inv-stage-sub">
+                    Invite three friends to share how they see you socially.
+                  </p>
                 </div>
                 <div className="inv-stage-limit">24 hrs</div>
               </div>
             </div>
             <div className="inv-stage-rule" />
             <p className="inv-key-card-p">
-              <strong>Stage 1 starts now.</strong> Complete through{" "}
-              <strong>UAE mobile OTP verification</strong> before this first window closes.
+              Your Key is claimed. Complete your StoryBuilder before this window closes to generate
+              your Philia ID and claim Explorer.
             </p>
             <div className="inv-timer">
-              <p className="inv-timer-label">Time left to claim this Key</p>
+              <p className="inv-timer-label">Time left to complete your story</p>
               <p className="inv-time">{clock}</p>
-              <p className="inv-timer-note">
-                If this clock reaches zero, the Key returns to {from}.
-              </p>
             </div>
           </div>
         </div>
@@ -386,7 +383,7 @@ export function InvitePrimer() {
               Log out and open the invite as the friend
             </button>
           ) : (
-            <p className="inv-primer-micro">Claim window · ends at UAE mobile verification</p>
+            <p className="inv-primer-micro">Story window · remaining time</p>
           )}
         </div>
       </section>

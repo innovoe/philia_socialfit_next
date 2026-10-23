@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { PhiliaIdCard } from "@/components/gate/PhiliaIdCard";
-import { getMe, getPassport, patchCeremony } from "@/lib/api/member";
+import { formatMirrorArchetypes, getMe, getMirror, getPassport, patchCeremony } from "@/lib/api/member";
 import {
   applyPassportToSession,
   persistCeremonyStep,
@@ -17,6 +17,7 @@ import { CtaEnd } from "@/components/gate/CtaEnd";
 export default function CeremonyMirrorPage() {
   const [view, setView] = useState<PassportView | null>(null);
   const [busy, setBusy] = useState(false);
+  const [socialArch, setSocialArch] = useState("Pending");
 
   useEffect(() => {
     if (!requireMemberAccess()) return;
@@ -32,6 +33,12 @@ export default function CeremonyMirrorPage() {
         writeSession({ explorerReady: true });
       } catch {
         if (isSessionExpiring()) return;
+      }
+      try {
+        const mirror = await getMirror();
+        setSocialArch(formatMirrorArchetypes(mirror) || "Pending");
+      } catch {
+        /* keep Pending */
       }
       try {
         const passport = await getPassport();
@@ -98,7 +105,8 @@ export default function CeremonyMirrorPage() {
                 view={view}
                 flipped
                 interactive={false}
-                highlightSocial
+                socialArch={socialArch}
+                highlightSocial={socialArch === "Pending"}
                 qrCaption="Private mirror pending."
               />
             </div>

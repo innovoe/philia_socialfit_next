@@ -2,7 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { PhiliaIdCard, PidThemeBar } from "@/components/gate/PhiliaIdCard";
-import { getMe, patchMe, getPassport, patchCeremony, patchPassport, type Me } from "@/lib/api/member";
+import {
+  formatMirrorArchetypes,
+  getMe,
+  getMirror,
+  getPassport,
+  patchCeremony,
+  patchMe,
+  patchPassport,
+  type Me,
+} from "@/lib/api/member";
 import {
   applyPassportToSession,
   getSavedIdTheme,
@@ -32,6 +41,7 @@ export default function CeremonyIdPage() {
   const [nameBusy, setNameBusy] = useState(false);
   const [nameNote, setNameNote] = useState("");
   const [nameErr, setNameErr] = useState("");
+  const [socialArch, setSocialArch] = useState("Pending");
 
   function applyName(me: Me) {
     applyMeToSession(me);
@@ -69,6 +79,13 @@ export default function CeremonyIdPage() {
           window.location.replace(routes.ceremony);
           return;
         }
+      }
+
+      try {
+        const mirror = await getMirror();
+        setSocialArch(formatMirrorArchetypes(mirror) || "Pending");
+      } catch {
+        /* keep Pending */
       }
 
       try {
@@ -204,7 +221,12 @@ export default function CeremonyIdPage() {
                 marginBottom: 0,
               }}
             >
-              <PhiliaIdCard view={view} flipped={flipped} onFlip={() => setFlipped((v) => !v)} />
+              <PhiliaIdCard
+                view={view}
+                flipped={flipped}
+                socialArch={socialArch}
+                onFlip={() => setFlipped((v) => !v)}
+              />
             </div>
             <PidThemeBar theme={view.theme} onPick={pickTheme} />
             <button

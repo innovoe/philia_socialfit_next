@@ -95,14 +95,62 @@ export type Me = {
   membership_choice?: MembershipChoice | null;
 };
 
+export type MirrorArchetype = {
+  archetype?: string;
+  count?: number;
+};
+
 export type Mirror = {
   status?: string;
-  archetypes?: unknown;
+  archetypes?: MirrorArchetype[] | unknown;
   archetype?: unknown;
   social_archetype?: unknown;
   leading_archetype?: unknown;
   responses_count?: number;
 };
+
+function rawArchetypeName(raw: unknown): string {
+  if (raw == null || raw === "") return "";
+  if (typeof raw === "string") {
+    const s = raw.trim();
+    return !s || s === "[object Object]" ? "" : s;
+  }
+  if (typeof raw !== "object") return "";
+  const rec = raw as Record<string, unknown>;
+  if (rec.archetype != null) return rawArchetypeName(rec.archetype);
+  if (rec.name != null) return rawArchetypeName(rec.name);
+  if (rec.label != null) return rawArchetypeName(rec.label);
+  return "";
+}
+
+/** Comma-separated social archetypes from GET /me/mirror/. Max 3 names. */
+export function formatMirrorArchetypes(mirror: Mirror | null | undefined, max = 3): string {
+  if (!mirror) return "";
+  const names: string[] = [];
+  const seen = new Set<string>();
+  const push = (raw: unknown) => {
+    const name = rawArchetypeName(raw);
+    if (!name) return;
+    const key = name.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    names.push(name);
+  };
+  if (Array.isArray(mirror.archetypes)) {
+    for (const item of mirror.archetypes) {
+      push(item);
+      if (names.length >= max) break;
+    }
+  } else if (mirror.archetypes) {
+    push(mirror.archetypes);
+  }
+  if (!names.length) {
+    push(mirror.archetype);
+    push(mirror.social_archetype);
+    push(mirror.leading_archetype);
+  }
+  return names.slice(0, max).join(", ");
+}
 
 export type Passport = {
   passport_display?: string | null;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PlaceMapPicker } from "@/components/gate/PlaceMapPicker";
 import {
   FREETEXT_KEYS,
@@ -31,6 +31,8 @@ export function StorySheet({
   const [otherVal, setOtherVal] = useState("");
   const [partnership, setPartnership] = useState("");
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [cueOn, setCueOn] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const isPod = fieldKey === "home" || fieldKey === "work" || fieldKey === "frequent";
   const isMulti = field?.type === "multi" || field?.type === "rank";
@@ -44,6 +46,26 @@ export function StorySheet({
     setExpanded(null);
     setPartnership(String(answers.partnershipNote || ""));
   }, [fieldKey]);
+
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list || isPod) {
+      setCueOn(false);
+      return;
+    }
+    function sync() {
+      if (!list) return;
+      setCueOn(list.scrollHeight - list.scrollTop - list.clientHeight > 28);
+    }
+    sync();
+    list.addEventListener("scroll", sync, { passive: true });
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(sync) : null;
+    ro?.observe(list);
+    return () => {
+      list.removeEventListener("scroll", sync);
+      ro?.disconnect();
+    };
+  }, [fieldKey, expanded, otherOpen, isPod, field?.options.length]);
 
   if (!fieldKey || !field) return null;
 
@@ -102,7 +124,7 @@ export function StorySheet({
           <>
             <div className="sb-options-wrap">
               {PILL_KEYS.has(fieldKey) ? (
-                <div className="sb-options-pills" id="sbOptionsList">
+                <div className="sb-options-pills" id="sbOptionsList" ref={listRef}>
                   {field.options.map((o) => {
                     const sel = isMulti && temp.includes(o.main);
                     return (
@@ -136,7 +158,7 @@ export function StorySheet({
                   ) : null}
                 </div>
               ) : (
-                <div className="sb-options-grid" id="sbOptionsList">
+                <div className="sb-options-grid" id="sbOptionsList" ref={listRef}>
                   {field.options.map((o, i) => {
                     const rankIdx = temp.indexOf(o.main);
                     const sel = isMulti && rankIdx >= 0;
@@ -203,6 +225,19 @@ export function StorySheet({
                   })}
                 </div>
               )}
+              <button
+                id="sbScrollCue"
+                className={`sty-scroll-cue${cueOn ? " is-on" : ""}`}
+                type="button"
+                aria-label="Scroll for more choices"
+                onClick={() => {
+                  listRef.current?.scrollBy({ top: 120, behavior: "smooth" });
+                }}
+              >
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polyline points="4,6 8,10 12,6" />
+                </svg>
+              </button>
             </div>
 
             {showPartnership ? (

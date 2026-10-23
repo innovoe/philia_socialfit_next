@@ -137,6 +137,19 @@ export function hasAccess() {
   return !!readSession().access;
 }
 
+/** Already past Key claim — Explorer / ID / Hub. Do not send them to unlock. */
+export function isVerifiedMemberSession() {
+  const s = readSession();
+  return !!(
+    s.explorerReady ||
+    s.hubUnlocked ||
+    s.ceremonyStep === "id" ||
+    s.ceremonyStep === "keys" ||
+    s.ceremonyStep === "hub" ||
+    s.passportDisplay
+  );
+}
+
 export function hasFounderKey() {
   const s = readSession();
   return !!s.founderToken && s.keyId != null;

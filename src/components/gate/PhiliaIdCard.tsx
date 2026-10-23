@@ -30,6 +30,7 @@ export function PhiliaIdCard({
 }: PhiliaIdCardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const caption = qrCaption ?? (view.serial ? view.serial : "Private passport mark");
+  const socialPending = !socialArch || socialArch.toLowerCase() === "pending";
 
   useEffect(() => {
     paintPassportMark(canvasRef.current, view.serial || view.name || "philia");
@@ -119,7 +120,7 @@ export function PhiliaIdCard({
               </div>
               <div className={`pid-field compact${highlightSocial ? " cer4-missing-field" : ""}`}>
                 <div className="pid-lbl">Social Archetype</div>
-                <div className="pid-val pending">{socialArch}</div>
+                <div className={`pid-val${socialPending ? " pending" : ""}`}>{socialArch}</div>
                 <div className="pid-mr" />
               </div>
               <div className="pid-field compact">

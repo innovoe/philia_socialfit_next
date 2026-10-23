@@ -8,11 +8,12 @@ import {
   writeSession,
   type MembershipChoice,
 } from "@/lib/session";
-import { getMe, getMirror, type Me, type Mirror } from "@/lib/api/member";
+import { formatMirrorArchetypes, getMe, getMirror, type Me, type Mirror } from "@/lib/api/member";
 import {
   createKeyRequest,
   getKeyRequests,
   getMyKeys,
+  keyMirrorAnswered,
   outboundClockMs,
   type KeyRequest,
   type OutboundKey,
@@ -26,10 +27,10 @@ import {
   formatHubWindow,
   goLogout,
   HUB_POLL_MS,
-  hubArchetypeLabel,
   hubKeysSnapshot,
   hubSegFilled,
   keyHasLiveSendWindow,
+  keyIsAllocated,
   keyRequestCopy,
   keyRequestCtaLabel,
   soonestKeyDeadline,
@@ -37,6 +38,7 @@ import {
 import { routes } from "@/lib/routes";
 import { HubPricing } from "@/components/gate/HubPricing";
 import { SocialFabric } from "@/components/gate/SocialFabric";
+import { HubNextContent } from "@/components/gate/HubNextContent";
 
 function keyDisplayName(k: OutboundKey) {
   const slot = k.slot || 0;
@@ -66,6 +68,7 @@ function HubKeyCard({
   const state = k.state === "available" ? "allocated" : k.state || "allocated";
   const name = keyDisplayName(k);
   const unsent = state === "allocated";
+  const answered = keyMirrorAnswered(k);
   const canNominate = unsent && keyHasLiveSendWindow(k);
   const deadline = outboundClockMs(k);
   const countdown = deadline ? formatHubCountdown(deadline) : "";
@@ -156,7 +159,7 @@ function HubKeyCard({
       <div className="cer7-seg-track">
         {(["sent", "claimed", "answered", "activated"] as const).map((stage) => (
           <div className="cer7-seg" key={stage}>
-            <div className={`cer7-seg-bar${hubSegFilled(state, stage) ? " filled" : ""}`} />
+            <div className={`cer7-seg-bar${hubSegFilled(state, stage, answered) ? " filled" : ""}`} />
             <span className="cer7-seg-lbl">{stage.charAt(0).toUpperCase() + stage.slice(1)}</span>
           </div>
         ))}
@@ -175,6 +178,7 @@ export function HubScreen({ initialTab = 1 }: { initialTab?: 1 | 2 | 3 }) {
   const [requestErr, setRequestErr] = useState("");
   const [requestJustSent, setRequestJustSent] = useState(false);
   const [unlockOn, setUnlockOn] = useState(false);
+  const [nextOpen, setNextOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [helpSlot, setHelpSlot] = useState<number | null>(null);
   const [choice, setChoice] = useState<MembershipChoice | null>(() => readSession().membershipChoice);
@@ -272,13 +276,14 @@ export function HubScreen({ initialTab = 1 }: { initialTab?: 1 | 2 | 3 }) {
 
   const list = keys || [];
   const sent = countSentKeys(list);
-  const archSrc = mirror
-    ? mirror.archetypes || mirror.archetype || mirror.social_archetype || mirror.leading_archetype
-    : null;
-  const archLabel = hubArchetypeLabel(archSrc);
+  const archLabel = formatMirrorArchetypes(mirror);
   const mirrors = typeof mirror?.responses_count === "number" ? mirror.responses_count : 0;
   const windowMs = soonestKeyDeadline(list);
-  const showRequest = keys !== null && canOfferExtraKeyRequest(list, me);
+  const threeUsed = [1, 2, 3].every((slot) => {
+    const k = list.find((x) => Number(x.slot) === slot);
+    return !!(k && !keyIsAllocated(k));
+  });
+  const showRequest = keys !== null && (canOfferExtraKeyRequest(list, me) || threeUsed);
   const reqStatus = String(request?.status || "").toLowerCase();
   const reqCopy = keyRequestCopy(reqStatus, requestJustSent);
   const reqLocked = requestBusy || reqStatus === "pending" || reqStatus === "granted";
@@ -323,7 +328,7 @@ export function HubScreen({ initialTab = 1 }: { initialTab?: 1 | 2 | 3 }) {
           </div>
         </div>
 
-        <div className="cer-pad" style={{ paddingTop: 20, paddingBottom: 52 }}>
+        <div className="cer-pad" style={{ paddingTop: 20, paddingBottom: 80 }}>
           <div className="cer7-stat-bar-wrap">
             <div className="cer7-stat-bar">
               <div className="cer7-stat-col">
@@ -415,7 +420,24 @@ export function HubScreen({ initialTab = 1 }: { initialTab?: 1 | 2 | 3 }) {
                   {requestBusy ? "Sending…" : keyRequestCtaLabel(reqStatus)}
                 </button>
               </div>
-              <p className="key-request-copy">{reqCopy.body}</p>
+              <p className="key-request-copy">
+                {reqStatus === "pending" || reqStatus === "granted" ? (
+                  reqCopy.body
+                ) : (
+                  <>
+                    Once your 3 keys are used, you may request additional keys from{" "}
+                    <button
+                      type="button"
+                      className="key-request-here"
+                      disabled={reqLocked}
+                      onClick={onRequest}
+                    >
+                      here
+                    </button>
+                    .
+                  </>
+                )}
+              </p>
               <p className="key-request-status">
                 {requestErr ||
                   (reqStatus === "declined"
@@ -488,6 +510,38 @@ export function HubScreen({ initialTab = 1 }: { initialTab?: 1 | 2 | 3 }) {
                   View pricing →
                 </button>
               </div>
+            </div>
+          </div>
+
+          <div className="cer7-tier-card-wrap">
+            <div className={`cer7-tier-card cer7-next-card${nextOpen ? " is-open" : ""}`}>
+              <button
+                className="cer7-next-acc"
+                type="button"
+                aria-expanded={nextOpen}
+                onClick={() => setNextOpen((v) => !v)}
+              >
+                <span className="cer7-next-acc-lbl">What happens next?</span>
+                <span className="cer7-next-chev" aria-hidden="true">
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <polyline points="4,6 8,10 12,6" />
+                  </svg>
+                </span>
+              </button>
+              {nextOpen ? (
+                <div className="cer7-next-body">
+                  <HubNextContent compact />
+                  <div className="cer7-tier-footer">
+                    <button
+                      className="cer7-key-cta-ed dark"
+                      type="button"
+                      onClick={() => window.location.assign(routes.hubNext)}
+                    >
+                      Open full view →
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>

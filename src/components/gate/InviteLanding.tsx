@@ -29,6 +29,7 @@ export function InviteLanding() {
   const queryCode = queryKeyCode(raw);
   const queryFrom = String(search.get("from") || search.get("name") || "").trim();
   const [code, setCode] = useState("");
+  const [locked, setLocked] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [settled, setSettled] = useState(false);
@@ -39,7 +40,10 @@ export function InviteLanding() {
   useEffect(() => {
     const s = readSession();
     const nextCode = queryCode || s.keyCode || "";
-    if (nextCode) setCode(nextCode);
+    if (nextCode) {
+      setCode(nextCode);
+      setLocked(true);
+    }
     setFrom(s.ownerDisplayName || queryFrom || "a friend");
     setNominee(s.nomineeFirstName || "");
 
@@ -143,7 +147,7 @@ export function InviteLanding() {
           <p className={`inv-to-line${nominee ? " is-on" : ""}`}>For {nominee}</p>
           <form onSubmit={onOpen}>
             <div className="inv-code-wrap">
-              <div className="inv-code-shell">
+              <div className={`inv-code-shell${locked ? " is-locked" : ""}`}>
                 <input
                   className="inv-code-input"
                   type="text"
@@ -155,7 +159,10 @@ export function InviteLanding() {
                   placeholder="ENTER CODE"
                   aria-label="Philia Key code"
                   value={code}
+                  disabled={locked}
+                  readOnly={locked}
                   onChange={(e) => {
+                    if (locked) return;
                     setCode(normaliseKeyCode(e.target.value));
                     setError("");
                   }}

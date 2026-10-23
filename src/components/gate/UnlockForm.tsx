@@ -18,9 +18,15 @@ import { maskPhone } from "@/lib/api/phone";
 import { readApiRefusal, refusalGoesToLogin, refusalLine } from "@/lib/api/errors";
 import { isSessionExpiring } from "@/lib/expire";
 import { normaliseKeyCode, stashKeyValidate } from "@/lib/invite";
-import { bounceIfLiveSession } from "@/lib/live-session";
-import { resumeMember } from "@/lib/resume";
-import { applyMeToSession, hasAccess, readSession, writeSession } from "@/lib/session";
+import { isHubReady, resumeMember } from "@/lib/resume";
+import {
+  applyMeToSession,
+  hasAccess,
+  isVerifiedMemberSession,
+  normalizeCeremonyStep,
+  readSession,
+  writeSession,
+} from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { SessionHold } from "@/components/gate/SessionHold";
 import { CtaEnd, ctaStateClass } from "@/components/gate/CtaEnd";
@@ -32,9 +38,9 @@ export function UnlockForm() {
   const [open, setOpen] = useState(false);
   const [claimMode, setClaimMode] = useState(false);
   const [expired, setExpired] = useState<FounderKeyExpired | null>(null);
+  const [memberOnly, setMemberOnly] = useState(false);
 
   useEffect(() => {
-    if (bounceIfLiveSession({ onlyIfClaimed: true })) return;
     let cancelled = false;
 
     (async () => {
@@ -46,10 +52,23 @@ export function UnlockForm() {
           const me = await getMe();
           if (cancelled || isSessionExpiring()) return;
           applyMeToSession(me);
-          setClaimMode(!!me.keys_to_the_city && me.has_claimed_key !== true);
+          const founderClaim = !!me.keys_to_the_city && me.has_claimed_key !== true;
+          if (founderClaim) {
+            setClaimMode(true);
+          } else if (
+            me.has_claimed_key ||
+            me.passport_display ||
+            isHubReady(me) ||
+            normalizeCeremonyStep(me.ceremony_step)
+          ) {
+            await resumeMember(me);
+            return;
+          }
         } catch {
           if (cancelled || isSessionExpiring()) return;
         }
+      } else if (isVerifiedMemberSession()) {
+        setMemberOnly(true);
       }
 
       if (!cancelled) setOpen(true);
@@ -243,6 +262,18 @@ export function UnlockForm() {
             </button>
           </>
           )
+        ) : memberOnly ? (
+          <>
+            <p className="gate-copy">
+              You already have SocialFit access.
+              <br />
+              A Key is no longer needed.
+            </p>
+            <Link href={routes.login} className="gate-cta gate-cta-primary" style={{ display: "flex" }}>
+              <span>Log in</span>
+              <CtaEnd busy={false} />
+            </Link>
+          </>
         ) : (
           <>
             <p className="gate-copy">

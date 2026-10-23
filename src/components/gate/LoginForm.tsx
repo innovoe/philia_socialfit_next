@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { getMe } from "@/lib/api/member";
 import { isValidEmail } from "@/lib/api/origins";
 import {
@@ -243,9 +242,6 @@ export function LoginForm() {
             <span>{busy ? "Sending…" : "Send code"}</span>
             <CtaEnd busy={busy} />
           </button>
-          <Link href={routes.unlock} className="gate-text-link" style={{ marginTop: 18, display: "inline-block" }}>
-            I have a Key instead
-          </Link>
         </form>
       ) : (
         <form onSubmit={onVerify}>

@@ -1,6 +1,6 @@
 /* ── Ceremony Flow sCer1–sCer6 ── */
-#sCer1,#sCer3,#sCer4,#sCer5,#sCer7,#sMembership{min-height:100vh;background:var(--porcelain);box-shadow:0 0 60px rgba(0,0,0,.12);overflow-y:auto;overflow-x:hidden}
-#sCer1.active,#sCer3.active,#sCer4.active,#sCer5.active,#sCer7.active,#sMembership.active{display:block}
+#sCer1,#sCer3,#sCer4,#sCer5,#sCer7,#sMembership,#sHubNext{min-height:100vh;background:var(--porcelain);box-shadow:0 0 60px rgba(0,0,0,.12);overflow-y:auto;overflow-x:hidden}
+#sCer1.active,#sCer3.active,#sCer4.active,#sCer5.active,#sCer7.active,#sMembership.active,#sHubNext.active{display:block}
 #sCer2,#sCer6{min-height:100vh;background:var(--porcelain);overflow-y:auto;overflow-x:hidden;box-shadow:0 0 60px rgba(0,0,0,.12)}
 #sCer2.active,#sCer6.active{display:block}
 .cer-topbar{display:flex;justify-content:space-between;align-items:center;padding:44px 34px 16px;position:sticky;top:0;z-index:11;background:var(--porcelain)}
@@ -391,6 +391,8 @@
 .cer7-key-card.key-request .cer7-key-name-ed{line-height:1.2;max-width:min(100%,220px)}
 .key-request[hidden]{display:none!important}
 .key-request-copy{font-family:Inter,sans-serif;font-size:12.5px;line-height:1.5;font-weight:300;color:#4f5364;margin:0}
+.key-request-here{display:inline;padding:0;margin:0;border:none;background:none;color:var(--malibu);font:inherit;font-weight:500;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.key-request-here:disabled{opacity:.45;cursor:default;text-decoration:none}
 .key-request-status{font-family:Inter,sans-serif;font-size:12px;line-height:1.45;font-weight:300;color:rgba(32,32,52,.50);margin:8px 0 0}
 .key-request-status:empty{display:none}
 .cer7-key-card.key-request .cer7-key-row{margin-bottom:10px}
@@ -483,6 +485,35 @@
 .cer7-tier-link:hover{color:#1a1a2e}
 .cer7-tier-blink-arrow{display:inline-block;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid rgba(180,100,0,.80);margin-left:4px;vertical-align:middle;animation:tierArrowBlink 1s ease-in-out infinite}
 @keyframes tierArrowBlink{0%,100%{opacity:1}50%{opacity:.15}}
+.cer7-next-card{padding:6px 16px 8px}
+.cer7-next-card.is-open{padding-bottom:4px}
+.cer7-next-acc{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:10px 0;background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cer7-next-acc-lbl{font-family:var(--font-inter),system-ui,sans-serif;font-size:13px;font-weight:500;color:var(--steel);letter-spacing:-.01em;margin:0;text-align:left}
+.cer7-next-chev{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.60);border:1px solid rgba(32,32,52,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .3s ease;color:rgba(32,32,52,.36)}
+.cer7-next-chev svg{width:13px;height:13px}
+.cer7-next-card.is-open .cer7-next-chev{transform:rotate(180deg)}
+.cer7-next-body{padding:0 0 10px}
+.cer7-next-body .cer7-tier-footer{margin-top:8px}
+.hn-wrap{padding:8px 34px 120px}
+.hn-content{display:flex;flex-direction:column}
+.hn-hear{font-family:var(--font-inter),system-ui,sans-serif;font-size:15px;line-height:1.58;font-weight:300;color:#4f5364;letter-spacing:.004em;margin:0 0 28px}
+.hn-eyebrow{font-family:var(--font-montserrat),sans-serif;font-size:7px;letter-spacing:.22em;text-transform:uppercase;font-weight:800;color:rgba(32,32,52,.38);margin:0 0 14px}
+.hn-head{margin:0 0 28px}
+.hn-head-sm{font-family:var(--font-montserrat),sans-serif;font-size:18px;line-height:1.2;font-weight:650;letter-spacing:-.04em;color:var(--steel);margin:0 0 18px}
+.hn-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:26px}
+.hn-step{display:flex;align-items:flex-start;gap:14px}
+.hn-n{font-family:var(--font-montserrat),sans-serif;font-size:11px;letter-spacing:.04em;font-weight:500;color:rgba(32,32,52,.38);margin:2px 0 0;flex-shrink:0;min-width:28px}
+.hn-step-copy{min-width:0;flex:1}
+.hn-title{font-family:var(--font-inter),system-ui,sans-serif;font-size:15px;line-height:1.4;font-weight:500;color:var(--steel);margin:0 0 8px;letter-spacing:-.01em}
+.hn-body{font-family:var(--font-inter),system-ui,sans-serif;font-size:14px;line-height:1.58;font-weight:300;color:#4f5364;margin:0;letter-spacing:.003em}
+.hn-content.is-compact .hn-hear{font-size:13.5px;line-height:1.55;margin:0 0 18px}
+.hn-content.is-compact .hn-eyebrow{margin:0 0 10px}
+.hn-content.is-compact .hn-head-sm{margin:0 0 16px}
+.hn-content.is-compact .hn-steps{gap:16px}
+.hn-content.is-compact .hn-n{font-size:10px;min-width:24px}
+.hn-content.is-compact .hn-title{font-size:13.5px;margin:0 0 6px}
+.hn-content.is-compact .hn-body{font-size:13px;line-height:1.52}
+.hn-wrap .sv-cta{margin-top:36px}
 /* sCer7 pricing cards */
 .price-card{border-radius:22px;padding:22px 20px 20px;position:relative;overflow:hidden;backdrop-filter:blur(26px) saturate(155%);-webkit-backdrop-filter:blur(26px) saturate(155%);border:1px solid var(--pc-border);box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 8px 28px var(--pc-shadow),0 24px 48px rgba(0,0,0,.08);background:radial-gradient(circle at 22% 12%,rgba(255,255,255,.48),transparent 20%),radial-gradient(circle at 80% 24%,color-mix(in srgb,var(--pc-accent) 28%,transparent),transparent 26%),linear-gradient(134deg,var(--pc-a),var(--pc-b) 42%,var(--pc-c) 100%)}
 .price-card::before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,.18) 14%,transparent 32%);pointer-events:none;mix-blend-mode:overlay}

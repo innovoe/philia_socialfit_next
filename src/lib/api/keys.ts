@@ -66,6 +66,12 @@ export function normalizeOutboundKeys(raw: unknown): OutboundKey[] {
   });
 }
 
+export function keyMirrorAnswered(k: OutboundKey | null | undefined) {
+  if (!k) return false;
+  if (k.mirror_answered === true) return true;
+  return String(k.mirror_status || "").toLowerCase() === "answered";
+}
+
 export function parseDeadline(v: string | number | null | undefined) {
   if (v == null) return null;
   if (typeof v === "number") return Number.isFinite(v) ? v : null;

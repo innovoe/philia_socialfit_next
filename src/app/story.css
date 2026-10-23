@@ -199,8 +199,10 @@ body:has(#flexNav.fn-open) .sty-scroll-cue#readScrollCue,
 #sStory:has(#storyResult.on) #storyScrollCue{opacity:0!important;animation:none;pointer-events:none!important}
 #sbScrollCue,#storyResultScrollCue{top:auto;right:18px;bottom:10px}
 .sb-options-wrap{position:relative}
-#sbOptionsList{max-height:52vh;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-#sbOptionsList::-webkit-scrollbar{display:none}
+#sbOptionsList{max-height:52vh;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(32,32,52,.28) transparent}
+#sbOptionsList::-webkit-scrollbar{width:4px;display:block}
+#sbOptionsList::-webkit-scrollbar-thumb{background:rgba(32,32,52,.28);border-radius:4px}
+.sb-options-wrap::after{content:"";position:absolute;bottom:0;left:0;right:0;height:36px;background:linear-gradient(to top,#fff 12%,rgba(255,255,255,0));pointer-events:none;z-index:1}
 #sStory,.sty-screen.sty-story{position:relative}
 /* story screens hide the nav pill — no bottom padding needed for it */
 #sStory,#sRead,.sty-screen.sty-read{padding-bottom:0!important}

@@ -21,6 +21,7 @@ export const routes = {
   ceremonyKeys: "/ceremony/keys",
   hub: "/hub",
   hubMembership: "/hub/membership",
+  hubNext: "/hub/next",
   profile: "/profile",
   id: "/id",
   waitlist: "/waitlist",

@@ -14,7 +14,7 @@ import {
 } from "@/lib/session";
 import type { OutboundKey } from "@/lib/api/keys";
 import { outboundClockMs, parseDeadline } from "@/lib/api/keys";
-import type { Me, Mirror } from "@/lib/api/member";
+import { formatMirrorArchetypes, type Me, type Mirror } from "@/lib/api/member";
 
 export const HUB_POLL_MS = 30000;
 
@@ -35,13 +35,17 @@ export function formatHubWindow(deadlineMs: number | null | undefined) {
   return `${h}h ${String(m).padStart(2, "0")}m`;
 }
 
-export function hubSegFilled(state: string | null | undefined, stage: "sent" | "claimed" | "answered" | "activated") {
+export function hubSegFilled(
+  state: string | null | undefined,
+  stage: "sent" | "claimed" | "answered" | "activated",
+  answered = false,
+) {
   const order = ["allocated", "available", "sent", "claimed", "answered", "activated"];
   let idx = order.indexOf(String(state || "allocated"));
   if (idx < 0) idx = 0;
   if (stage === "sent") return idx >= 2;
   if (stage === "claimed") return idx >= 3;
-  if (stage === "answered") return idx >= 4;
+  if (stage === "answered") return answered || idx >= 4;
   if (stage === "activated") return idx >= 5;
   return false;
 }
@@ -95,14 +99,25 @@ export function hubArchetypeLabel(raw: unknown): string {
 export function hubKeysSnapshot(keys: OutboundKey[], mirror: Mirror | null) {
   const keyPart = (keys || [])
     .map((k) =>
-      [k.slot, k.key_id, k.state, k.nominee_name || "", k.claim_deadline || "", k.send_deadline || "", k.invite_code || ""].join(":"),
+      [
+        k.slot,
+        k.key_id,
+        k.state,
+        k.mirror_answered ? "1" : "0",
+        k.mirror_status || "",
+        k.mirror_archetype || "",
+        k.nominee_name || "",
+        k.claim_deadline || "",
+        k.send_deadline || "",
+        k.invite_code || "",
+      ].join(":"),
     )
     .join("|");
   const mirPart = mirror
     ? [
         mirror.status || "",
         mirror.responses_count != null ? mirror.responses_count : "",
-        hubArchetypeLabel(mirror.archetypes || mirror.archetype || ""),
+        formatMirrorArchetypes(mirror),
       ].join(":")
     : "";
   return `${keyPart}::${mirPart}`;
@@ -184,7 +199,7 @@ export function keyRequestCopy(status: string | null | undefined, justSent = fal
   }
   return {
     title: "Request another Philia Key",
-    body: "Used your first three? Request another to invite someone else into SocialFit.",
+    body: "Once your 3 keys are used, you may request additional keys from here.",
   };
 }
 

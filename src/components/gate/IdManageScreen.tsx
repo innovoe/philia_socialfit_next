@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { PhiliaIdCard, PidThemeBar } from "@/components/gate/PhiliaIdCard";
 import {
+  formatMirrorArchetypes,
   getMe,
+  getMirror,
   getPassport,
   patchMe,
   patchPassport,
@@ -35,6 +37,7 @@ const LOC_BTNS: { id: LocationPrecision; label: string }[] = [
 
 export function IdManageScreen() {
   const [view, setView] = useState<PassportView | null>(null);
+  const [socialArch, setSocialArch] = useState("Pending");
   const [flipped, setFlipped] = useState(false);
   const [savedTheme, setSavedTheme] = useState<PassportTheme>("ice");
   const [saving, setSaving] = useState(false);
@@ -77,6 +80,13 @@ export function IdManageScreen() {
         applyMe(identity);
       } catch {
         if (isSessionExpiring()) return;
+      }
+      if (isSessionExpiring()) return;
+      try {
+        const mirror = await getMirror();
+        setSocialArch(formatMirrorArchetypes(mirror) || "Pending");
+      } catch {
+        /* keep Pending */
       }
       if (isSessionExpiring()) return;
       try {
@@ -226,7 +236,12 @@ export function IdManageScreen() {
               marginBottom: 0,
             }}
           >
-            <PhiliaIdCard view={view} flipped={flipped} onFlip={() => setFlipped((v) => !v)} />
+            <PhiliaIdCard
+              view={view}
+              flipped={flipped}
+              socialArch={socialArch}
+              onFlip={() => setFlipped((v) => !v)}
+            />
           </div>
           <div className="pid-flip-hint">Tap card to flip · front / back</div>
           <PidThemeBar theme={view.theme} onPick={pickTheme} />
