@@ -1,10 +1,10 @@
-import { hasAccess, hasFounderKey } from "@/lib/session";
+import { hasAccess, hasConsumerKey, hasFounderKey } from "@/lib/session";
 import { routes } from "@/lib/routes";
 
 const SIGNAL_RETURN_KEY = "philia_signal_return";
 
 export function canPlaySignalDemo() {
-  return hasFounderKey() || hasAccess();
+  return hasFounderKey() || hasConsumerKey() || hasAccess();
 }
 
 export function setSignalReturn(path: string) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { hasAccess, hasFounderKey } from "@/lib/session";
+import { hasAccess, hasConsumerKey, hasFounderKey } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { completeSignalDemo } from "@/lib/api/signal-demo";
 import { canPlaySignalDemo, RESULT_PEOPLE, RESULT_ROOMS, TAB_DESC, takeSignalReturn } from "@/lib/signal-demo";
@@ -158,7 +158,7 @@ export function SignalResults() {
       window.location.assign(routes.verified);
       return;
     }
-    if (hasFounderKey()) {
+    if (hasFounderKey() || hasConsumerKey()) {
       window.location.assign(routes.verify);
       return;
     }

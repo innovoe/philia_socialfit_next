@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { isInvitePayload, mapKeyEntryError, validateKeyCode } from "@/lib/api/key-entry";
+import { continueFromKeyCode } from "@/lib/key-gate";
 import { isApiError } from "@/lib/api/errors";
 import { videos } from "@/lib/assets";
 import {
@@ -87,8 +88,11 @@ export function InviteLanding() {
         return;
       }
       if (!isInvitePayload(r)) {
-        stashKeyValidate(r, val);
-        window.location.assign(routes.unlock);
+        const next = await continueFromKeyCode(val);
+        if (next.error) {
+          setError(next.error);
+          setBusy(false);
+        }
         return;
       }
       stashKeyValidate(r, val);

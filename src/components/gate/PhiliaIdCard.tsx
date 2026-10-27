@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   paintPassportMark,
   THEME_LABELS,
@@ -8,6 +8,7 @@ import {
   type PassportTheme,
   type PassportView,
 } from "@/lib/ceremony";
+import { isFounderSession } from "@/lib/session";
 
 type PhiliaIdCardProps = {
   view: PassportView;
@@ -31,6 +32,11 @@ export function PhiliaIdCard({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const caption = qrCaption ?? (view.serial ? view.serial : "Private passport mark");
   const socialPending = !socialArch || socialArch.toLowerCase() === "pending";
+  const [keyHeld, setKeyHeld] = useState("Founder Key");
+
+  useEffect(() => {
+    if (!isFounderSession()) setKeyHeld("Philia Key");
+  }, []);
 
   useEffect(() => {
     paintPassportMark(canvasRef.current, view.serial || view.name || "philia");
@@ -110,7 +116,7 @@ export function PhiliaIdCard({
               </div>
               <div className="pid-field">
                 <div className="pid-lbl">Key Held</div>
-                <div className="pid-val">Founder Key</div>
+                <div className="pid-val">{keyHeld}</div>
                 <div className="pid-mr" />
               </div>
               <div className="pid-field compact">

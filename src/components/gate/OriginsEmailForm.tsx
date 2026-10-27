@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { founderEmailStart, isValidEmail, mapOriginsError } from "@/lib/api/origins";
+import { applyCampaignToSession, founderEmailStart, isValidEmail, mapOriginsError } from "@/lib/api/origins";
 import { readApiRefusal, refusalGoesToLogin, refusalLine } from "@/lib/api/errors";
 import { bounceIfLiveSession } from "@/lib/live-session";
 import { readSession, writeSession } from "@/lib/session";
@@ -11,7 +11,7 @@ import { GateChrome } from "@/components/gate/GateChrome";
 import { CtaEnd, ctaStateClass } from "@/components/gate/CtaEnd";
 import { SessionHold } from "@/components/gate/SessionHold";
 
-export function OriginsEmailForm() {
+export function OriginsEmailForm({ gate = "origins" }: { gate?: "origins" | "enter" }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
@@ -30,7 +30,7 @@ export function OriginsEmailForm() {
         founderToken: token,
         founderEmail: fromUrl || readSession().founderEmail,
         emailStarted: true,
-        entryPath: "founder",
+        emailGate: gate,
       });
       router.replace(routes.originsClaim);
       return;
@@ -65,17 +65,18 @@ export function OriginsEmailForm() {
     }
     setBusy(true);
     try {
-      await founderEmailStart(value);
+      const started = await founderEmailStart(value);
       writeSession({
         founderEmail: value,
         emailStarted: true,
-        entryPath: "founder",
+        emailGate: gate,
       });
+      applyCampaignToSession(started);
       window.location.assign(routes.originsCode);
     } catch (err) {
       const { code } = readApiRefusal(err);
       if (refusalGoesToLogin(err)) {
-        writeSession({ founderEmail: value, entryPath: "founder" });
+        writeSession({ founderEmail: value, emailGate: gate });
         window.location.assign(routes.login);
         return;
       }
@@ -92,11 +93,19 @@ export function OriginsEmailForm() {
       replay
       headline={"A private layer\nfor the city."}
       copy={
-        <>
-          SocialFit is invite-only.
-          <br />
-          For Origins members, please enter your registered email to access your key code.
-        </>
+        gate === "enter" ? (
+          <>
+            SocialFit is invite-only.
+            <br />
+            Enter your registered email to continue.
+          </>
+        ) : (
+          <>
+            SocialFit is invite-only.
+            <br />
+            For Origins members, please enter your registered email to access your key code.
+          </>
+        )
       }
       micro="No open signup · UAE mobile required"
     >

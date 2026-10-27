@@ -5,9 +5,9 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { videos } from "@/lib/assets";
 import { getMe, type Me } from "@/lib/api/member";
-import { isInvitePayload, validateKeyCode } from "@/lib/api/key-entry";
 import { isSessionExpiring } from "@/lib/expire";
-import { looksLikeInviteQuery, queryKeyCode, stashKeyValidate } from "@/lib/invite";
+import { continueFromKeyCode } from "@/lib/key-gate";
+import { queryKeyCode } from "@/lib/invite";
 import { isHubReady, resumeMember } from "@/lib/resume";
 import { applyMeToSession, hasAccess } from "@/lib/session";
 import { routes } from "@/lib/routes";
@@ -55,26 +55,10 @@ export function LandingHome() {
     }
     let cancelled = false;
     (async () => {
-      try {
-        const r = await validateKeyCode(code);
-        if (cancelled) return;
-        if (!r || r.valid === false) {
-          window.location.replace(
-            looksLikeInviteQuery(raw) ? `${routes.invite}?code=${encodeURIComponent(code)}` : routes.unlock,
-          );
-          return;
-        }
-        stashKeyValidate(r, code);
-        if (isInvitePayload(r)) {
-          window.location.replace(routes.invite);
-          return;
-        }
-        window.location.replace(routes.unlock);
-      } catch {
-        if (cancelled) return;
-        window.location.replace(
-          looksLikeInviteQuery(raw) ? `${routes.invite}?code=${encodeURIComponent(code)}` : routes.unlock,
-        );
+      const result = await continueFromKeyCode(code);
+      if (cancelled) return;
+      if (result.error) {
+        window.location.replace(`${routes.unlock}?key=${encodeURIComponent(code)}`);
       }
     })();
     return () => {

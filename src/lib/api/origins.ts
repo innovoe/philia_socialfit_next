@@ -1,17 +1,26 @@
 import { apiRequest } from "@/lib/api/client";
 import { isApiError } from "@/lib/api/errors";
 import { publicEndpoints } from "@/lib/api/endpoints";
-import { hasAccess } from "@/lib/session";
+import { hasAccess, readSession, writeSession, type EntryPath } from "@/lib/session";
+import { routes } from "@/lib/routes";
 
-export type FounderEmailStart = { ok?: boolean; sent?: boolean };
+export type CampaignUserType = "founder" | "member";
+export type ReferredBy = "system" | "person";
 
-export type FounderEmailVerify = {
+type CampaignFields = {
+  user_type?: CampaignUserType | string | null;
+  referred_by?: ReferredBy | string | null;
+};
+
+export type FounderEmailStart = CampaignFields & { ok?: boolean; sent?: boolean };
+
+export type FounderEmailVerify = CampaignFields & {
   ok?: boolean;
   email?: string;
   founder_token: string;
 };
 
-export type FounderClaimKey = {
+export type FounderClaimKey = CampaignFields & {
   ok?: boolean;
   email?: string | null;
   key_id: number;
@@ -21,6 +30,27 @@ export type FounderClaimKey = {
   phone_verified?: boolean;
   phone_mask?: string;
 };
+
+/** Only apply when BE names the type. Do not guess founder. */
+export function campaignSessionPatch(payload: CampaignFields | null | undefined): {
+  entryPath: EntryPath;
+  keysToTheCity: boolean;
+} | null {
+  const type = String(payload?.user_type || "").toLowerCase();
+  if (type === "member") return { entryPath: "consumer", keysToTheCity: false };
+  if (type === "founder") return { entryPath: "founder", keysToTheCity: true };
+  return null;
+}
+
+export function applyCampaignToSession(payload: CampaignFields | null | undefined) {
+  const next = campaignSessionPatch(payload);
+  if (!next) return readSession();
+  return writeSession(next);
+}
+
+export function emailGateHref() {
+  return readSession().emailGate === "enter" ? routes.enter : routes.origins;
+}
 
 export type FounderKeyExpired = {
   canRequest: boolean;

@@ -6,6 +6,7 @@ import { getMe } from "@/lib/api/member";
 import { isSessionExpiring, requireMemberAccess } from "@/lib/expire";
 import { applyMeToSession, readSession } from "@/lib/session";
 import { isInviteSession } from "@/lib/invite";
+import { isConsumerSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { SessionHold } from "@/components/gate/SessionHold";
 
@@ -23,6 +24,7 @@ export default function VerifiedPage() {
   const [deadline, setDeadline] = useState<string | null>(null);
   const [now, setNow] = useState(0);
   const [invite, setInvite] = useState(false);
+  const [consumer, setConsumer] = useState(false);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -40,6 +42,7 @@ export default function VerifiedPage() {
       if (cancelled || isSessionExpiring()) return;
       const s = readSession();
       setInvite(isInviteSession());
+      setConsumer(isConsumerSession());
       setDeadline(s.finishDeadline || s.claimDeadline);
       setReady(true);
     })();
@@ -70,14 +73,16 @@ export default function VerifiedPage() {
           </video>
         </div>
         <p className="verified-stakes">
-          {invite
+          {invite || consumer
             ? "Your Key is live. Finish setup before the window closes."
             : "Your Founder Key is live. Finish setup before the window closes."}
         </p>
         <p className="verified-note">
           {invite
             ? "If the window closes, your access becomes dormant and this Key returns to your friend."
-            : "If the window closes, your access becomes dormant and this Key returns to the founder pool."}
+            : consumer
+              ? "If the window closes, your access becomes dormant."
+              : "If the window closes, your access becomes dormant and this Key returns to the founder pool."}
         </p>
         <div className="verified-line" />
         <div className="verified-cards">
@@ -132,7 +137,7 @@ export default function VerifiedPage() {
           </button>
           <div className="verified-status">
             <span className="verified-dot" />
-            <span>{invite ? "Key live" : "Founder Key live"}</span>
+            <span>{invite || consumer ? "Key live" : "Founder Key live"}</span>
             <span className="verified-sep">·</span>
             <span>{windowLabel || "Window pending"}</span>
             <span className="verified-mark">)))</span>

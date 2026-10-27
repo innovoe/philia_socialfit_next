@@ -11,6 +11,7 @@ import {
   applyMeToSession,
   hasAccess,
   hasFounderKey,
+  isFounderSession,
   readSession,
   writeSession,
 } from "@/lib/session";
@@ -318,7 +319,7 @@ export function VerifyForm() {
   if (phoneVerified) {
     return (
       <main className="verify-wrap">
-        <p className="verify-step">{returning ? "SocialFit" : "Origin · Step 2 of 3"}</p>
+        <p className="verify-step">{returning || !isFounderSession() ? "SocialFit" : "Origin · Step 2 of 3"}</p>
         <form onSubmit={onContinue}>
           <h1 className="verify-head">
             Secure your
@@ -400,7 +401,7 @@ export function VerifyForm() {
 
   return (
     <main className="verify-wrap">
-      <p className="verify-step">{returning ? "SocialFit" : "Origin · Step 2 of 3"}</p>
+      <p className="verify-step">{returning || !isFounderSession() ? "SocialFit" : "Origin · Step 2 of 3"}</p>
       {!sent ? (
         <form onSubmit={onSend}>
           <h1 className="verify-head">

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  applyCampaignToSession,
+  emailGateHref,
   founderClaimKey,
   founderRequestKey,
   mapOriginsError,
@@ -12,7 +14,7 @@ import {
 } from "@/lib/api/origins";
 import { readApiRefusal, refusalGoesToLogin, refusalLine } from "@/lib/api/errors";
 import { bounceIfLiveSession } from "@/lib/live-session";
-import { hasFounderToken, readSession, writeSession } from "@/lib/session";
+import { hasFounderToken, isFounderSession, readSession, writeSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { FounderKeyReissue } from "@/components/gate/FounderKeyReissue";
 import { GateChrome } from "@/components/gate/GateChrome";
@@ -29,7 +31,7 @@ export function OriginsClaimForm() {
   useEffect(() => {
     if (bounceIfLiveSession()) return;
     if (!hasFounderToken()) {
-      window.location.replace(routes.origins);
+      window.location.replace(emailGateHref());
       return;
     }
     setOpen(true);
@@ -46,7 +48,7 @@ export function OriginsClaimForm() {
     const token = readSession().founderToken;
     setError("");
     if (!token) {
-      router.replace(routes.origins);
+      router.replace(emailGateHref());
       return;
     }
     setBusy(true);
@@ -58,11 +60,11 @@ export function OriginsClaimForm() {
         keyCode: result.code || null,
         claimDeadline: result.claim_deadline || null,
         founderEmail: result.email || readSession().founderEmail,
-        entryPath: "founder",
         phoneVerified: phone.phoneVerified,
         phoneMask: phone.phoneMask,
       });
-      window.location.assign(routes.founder);
+      applyCampaignToSession(result);
+      window.location.assign(isFounderSession() ? routes.founder : routes.demo);
     } catch (err) {
       const { code } = readApiRefusal(err);
       if (refusalGoesToLogin(err)) {
@@ -76,11 +78,11 @@ export function OriginsClaimForm() {
         code === "founder_token_required"
       ) {
         writeSession({ founderToken: null, emailStarted: false });
-        router.replace(routes.origins);
+        router.replace(emailGateHref());
         return;
       }
       const stale = readFounderKeyExpired(err);
-      if (stale && (stale.canRequest || stale.requested)) {
+      if (stale && (stale.canRequest || stale.requested) && isFounderSession()) {
         applyExpired(stale);
         return;
       }
@@ -93,7 +95,7 @@ export function OriginsClaimForm() {
     const token = readSession().founderToken;
     setError("");
     if (!token) {
-      router.replace(routes.origins);
+      router.replace(emailGateHref());
       return;
     }
     setBusy(true);

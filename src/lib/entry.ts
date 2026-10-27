@@ -1,8 +1,6 @@
 /**
- * Consumer / shared-link flags.
- *
- * /enter?skip=demo,email&show=story&access=<jwt>&refresh=<jwt>
- * Also accepts founder_token / ft / email for Origins deep links.
+ * Shared-link flags (legacy skip/token query).
+ * Live consumer mail uses /enter?key=CODE — see continueFromKeyCode.
  */
 
 export type EntryFlags = {

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  applyCampaignToSession,
+  emailGateHref,
   founderEmailVerify,
   mapOriginsError,
 } from "@/lib/api/origins";
@@ -27,7 +29,7 @@ export function OriginsCodeForm() {
   useEffect(() => {
     if (bounceIfLiveSession()) return;
     if (!hasEmailStarted()) {
-      window.location.replace(routes.origins);
+      window.location.replace(emailGateHref());
       return;
     }
     setEmail(readSession().founderEmail || "");
@@ -49,14 +51,14 @@ export function OriginsCodeForm() {
         founderToken: result.founder_token,
         founderEmail: result.email || email,
         emailStarted: true,
-        entryPath: "founder",
       });
+      applyCampaignToSession(result);
       window.location.assign(routes.originsClaim);
     } catch (err) {
       const errCode = isApiError(err) ? err.code : String(err);
       if (errCode === "unknown_email") {
         writeSession({ emailStarted: false, founderToken: null });
-        router.replace(routes.origins);
+        router.replace(emailGateHref());
         return;
       }
       if (
@@ -65,7 +67,7 @@ export function OriginsCodeForm() {
         errCode === "founder_token_expired"
       ) {
         writeSession({ founderToken: null, emailStarted: false });
-        router.replace(routes.origins);
+        router.replace(emailGateHref());
         return;
       }
       setError(mapOriginsError(errCode));
@@ -100,7 +102,7 @@ export function OriginsCodeForm() {
           <span>{busy ? "One moment…" : "Verify email"}</span>
           <CtaEnd busy={busy} />
         </button>
-        <Link href={routes.origins} className="gate-text-link">
+        <Link href={emailGateHref()} className="gate-text-link">
           Use a different email
         </Link>
       </form>

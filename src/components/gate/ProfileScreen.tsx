@@ -25,6 +25,7 @@ import {
   WORLD_GROUP_MAX,
   WORLD_LABEL_MAX,
 } from "@/lib/worlds";
+import { suggestTypo } from "@/lib/spell";
 import { routes } from "@/lib/routes";
 
 function LinkRow({
@@ -117,6 +118,9 @@ export function ProfileScreen() {
   const [worlds, setWorlds] = useState(emptyWorlds);
   const [openGrp, setOpenGrp] = useState<WorldId | null>(null);
   const [worldDraft, setWorldDraft] = useState("");
+  const [worldHint, setWorldHint] = useState("");
+  const spellTimer = useRef<number | null>(null);
+  const spellCtl = useRef<AbortController | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState("");
   const [note, setNote] = useState("");
@@ -157,7 +161,32 @@ export function ProfileScreen() {
       }
     }
     boot();
+    return () => {
+      if (spellTimer.current != null) window.clearTimeout(spellTimer.current);
+      spellCtl.current?.abort();
+    };
   }, []);
+
+  function clearWorldHint() {
+    if (spellTimer.current != null) window.clearTimeout(spellTimer.current);
+    spellCtl.current?.abort();
+    setWorldHint("");
+  }
+
+  function queueWorldHint(value: string) {
+    clearWorldHint();
+    spellTimer.current = window.setTimeout(() => {
+      const ctl = new AbortController();
+      spellCtl.current = ctl;
+      void suggestTypo(value, ctl.signal)
+        .then((next) => {
+          if (!ctl.signal.aborted) setWorldHint(next || "");
+        })
+        .catch((err: unknown) => {
+          if (err instanceof DOMException && err.name === "AbortError") return;
+        });
+    }, 400);
+  }
 
   async function pickAvatar(file: File | undefined) {
     if (!file) return;
@@ -222,14 +251,15 @@ export function ProfileScreen() {
     await saveWorlds({ ...emptyWorlds(), ...worlds, [grp]: nextGroup });
   }
 
-  async function addWorld(grp: WorldId) {
-    const resolved = resolveWorldInput(grp, worldDraft);
+  async function addWorld(grp: WorldId, raw = worldDraft) {
+    const resolved = resolveWorldInput(grp, raw);
     if (resolved.error || !resolved.label) {
       setErr(resolved.error || "Type a world to add.");
       return;
     }
     const key = resolved.label.toLowerCase();
     if (worlds[grp].some((c) => c.toLowerCase() === key)) {
+      clearWorldHint();
       setWorldDraft("");
       return;
     }
@@ -237,6 +267,7 @@ export function ProfileScreen() {
       setErr("Keep each world to 20 items.");
       return;
     }
+    clearWorldHint();
     setWorldDraft("");
     await saveWorlds({ ...emptyWorlds(), ...worlds, [grp]: [...worlds[grp], resolved.label] });
   }
@@ -599,6 +630,7 @@ export function ProfileScreen() {
                   onClick={() => {
                     setOpenGrp(open ? null : grp.id);
                     setWorldDraft("");
+                    clearWorldHint();
                   }}
                   style={{
                     display: "flex",
@@ -692,8 +724,10 @@ export function ProfileScreen() {
                       value={open ? worldDraft : ""}
                       disabled={busy === "worlds" || selected.length >= WORLD_GROUP_MAX}
                       onChange={(e) => {
-                        setWorldDraft(e.target.value);
+                        const next = e.target.value;
+                        setWorldDraft(next);
                         setErr("");
+                        queueWorldHint(next);
                       }}
                       style={{ flex: 1, height: 40, fontSize: 13 }}
                     />
@@ -706,6 +740,39 @@ export function ProfileScreen() {
                       Add
                     </button>
                   </form>
+                  {open && worldHint ? (
+                    <p
+                      style={{
+                        width: "100%",
+                        margin: "2px 0 0",
+                        fontFamily: "Inter,sans-serif",
+                        fontSize: 11,
+                        lineHeight: 1.45,
+                        color: "rgba(32,32,52,.45)",
+                      }}
+                    >
+                      Did you mean{" "}
+                      <button
+                        type="button"
+                        disabled={busy === "worlds"}
+                        onClick={() => void addWorld(grp.id, worldHint)}
+                        style={{
+                          padding: 0,
+                          border: "none",
+                          background: "none",
+                          cursor: "pointer",
+                          color: "var(--steel)",
+                          font: "inherit",
+                          fontWeight: 600,
+                          textDecoration: "underline",
+                          textUnderlineOffset: 2,
+                        }}
+                      >
+                        {worldHint}
+                      </button>
+                      ?
+                    </p>
+                  ) : null}
                 </div>
               </div>
             );

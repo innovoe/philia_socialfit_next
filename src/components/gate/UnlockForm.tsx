@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { videos } from "@/lib/assets";
-import { isInvitePayload, validateKeyCode } from "@/lib/api/key-entry";
 import {
   founderClaimKey,
   founderRequestKey,
@@ -17,7 +16,8 @@ import { contactsAlreadyVerified, getMe } from "@/lib/api/member";
 import { maskPhone } from "@/lib/api/phone";
 import { readApiRefusal, refusalGoesToLogin, refusalLine } from "@/lib/api/errors";
 import { isSessionExpiring } from "@/lib/expire";
-import { normaliseKeyCode, stashKeyValidate } from "@/lib/invite";
+import { continueFromKeyCode } from "@/lib/key-gate";
+import { normaliseKeyCode, queryKeyCode } from "@/lib/invite";
 import { isHubReady, resumeMember } from "@/lib/resume";
 import {
   applyMeToSession,
@@ -45,7 +45,9 @@ export function UnlockForm() {
 
     (async () => {
       const s = readSession();
-      if (s.keyCode) setCode(s.keyCode);
+      const queryCode = queryKeyCode(window.location.search);
+      const nextCode = queryCode || s.keyCode || "";
+      if (nextCode) setCode(nextCode);
 
       if (hasAccess()) {
         try {
@@ -59,7 +61,9 @@ export function UnlockForm() {
             me.has_claimed_key ||
             me.passport_display ||
             isHubReady(me) ||
-            normalizeCeremonyStep(me.ceremony_step)
+            normalizeCeremonyStep(me.ceremony_step) ||
+            queryCode ||
+            s.keyId != null
           ) {
             await resumeMember(me);
             return;
@@ -69,6 +73,11 @@ export function UnlockForm() {
         }
       } else if (isVerifiedMemberSession()) {
         setMemberOnly(true);
+      } else if (queryCode) {
+        const result = await continueFromKeyCode(queryCode);
+        if (cancelled) return;
+        if (!result.error) return;
+        setError(result.error);
       }
 
       if (!cancelled) setOpen(true);
@@ -172,21 +181,9 @@ export function UnlockForm() {
     }
     setError("");
     setBusy(true);
-    try {
-      const r = await validateKeyCode(val);
-      if (!r || r.valid === false) {
-        setError("Invalid code — check and try again");
-        setBusy(false);
-        return;
-      }
-      stashKeyValidate(r, val);
-      if (isInvitePayload(r)) {
-        window.location.assign(routes.invite);
-        return;
-      }
-      window.location.assign(routes.founder);
-    } catch {
-      setError("Could not validate — try again");
+    const result = await continueFromKeyCode(val);
+    if (result.error) {
+      setError(result.error);
       setBusy(false);
     }
   }

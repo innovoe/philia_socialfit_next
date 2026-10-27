@@ -26,8 +26,21 @@ export type MirrorSubmit = {
 export function isInvitePayload(r: KeyValidate | null | undefined) {
   if (!r || r.valid === false) return false;
   if (r.entry_path === "invite") return true;
-  if (r.entry_path === "founder") return false;
+  if (r.entry_path === "founder" || r.entry_path === "consumer") return false;
   return r.key_type === "member";
+}
+
+export function isFounderPayload(r: KeyValidate | null | undefined) {
+  if (!r || r.valid === false) return false;
+  if (r.entry_path === "founder") return true;
+  const type = String(r.key_type || "").toLowerCase();
+  return type === "founder" || type === "founder_key";
+}
+
+export function isConsumerPayload(r: KeyValidate | null | undefined) {
+  if (!r || r.valid === false) return false;
+  if (isInvitePayload(r) || isFounderPayload(r)) return false;
+  return true;
 }
 
 export function validateKeyCode(code: string) {

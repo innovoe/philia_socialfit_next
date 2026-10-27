@@ -13,7 +13,8 @@ type JourneySource = "founder_key" | "referredphilia_key" | "key_drop_web";
 function journeySource(): JourneySource | null {
   const s = readSession();
   if (s.entryPath === "invite") return "referredphilia_key";
-  if (s.entryPath === "founder" || s.founderToken) return "founder_key";
+  if (s.entryPath === "founder") return "founder_key";
+  if (s.entryPath === "consumer") return "key_drop_web";
   return null;
 }
 

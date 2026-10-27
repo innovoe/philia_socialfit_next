@@ -2,7 +2,7 @@
 
 import { claimKey, getMe, type ClaimKeyResult, type Me } from "@/lib/api/member";
 import type { KeyValidate } from "@/lib/api/key-entry";
-import { isInvitePayload } from "@/lib/api/key-entry";
+import { isFounderPayload, isInvitePayload } from "@/lib/api/key-entry";
 import { hasAccess, readSession, writeSession, type EntryPath } from "@/lib/session";
 import { routes } from "@/lib/routes";
 
@@ -160,7 +160,7 @@ export function formatMirrorQuestion(raw: string | null | undefined) {
 export function stashKeyValidate(r: KeyValidate, code: string) {
   const c = normaliseKeyCode(code || r.invite_code || "");
   const invite = isInvitePayload(r);
-  const path: EntryPath = invite ? "invite" : "founder";
+  const path: EntryPath = invite ? "invite" : isFounderPayload(r) ? "founder" : "consumer";
   writeSession({
     keyId: r.key_id != null ? Number(r.key_id) : null,
     keyCode: c || null,
@@ -182,7 +182,9 @@ export function afterInviteValidate(_r?: KeyValidate) {
 
 export function isInviteSession() {
   const s = readSession();
-  return s.entryPath === "invite" || s.keyType === "member";
+  if (s.entryPath === "invite") return true;
+  if (s.entryPath === "consumer" || s.entryPath === "founder") return false;
+  return s.keyType === "member";
 }
 
 export function inviteOwnerName() {

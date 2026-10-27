@@ -11,6 +11,7 @@ import {
 } from "@/lib/ceremony";
 import { isSessionExpiring, requireMemberAccess } from "@/lib/expire";
 import { applyMeToSession, readSession, writeSession } from "@/lib/session";
+import { hydrateAnswersFromServer } from "@/lib/story-answers";
 import { routes } from "@/lib/routes";
 import { CtaEnd } from "@/components/gate/CtaEnd";
 
@@ -39,6 +40,11 @@ export default function CeremonyMirrorPage() {
         setSocialArch(formatMirrorArchetypes(mirror) || "Pending");
       } catch {
         /* keep Pending */
+      }
+      try {
+        await hydrateAnswersFromServer();
+      } catch {
+        /* keep local story answers */
       }
       try {
         const passport = await getPassport();

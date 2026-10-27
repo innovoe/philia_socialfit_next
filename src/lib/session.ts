@@ -4,6 +4,7 @@ import { maskPhone } from "@/lib/api/phone";
 import { worldsFilledCount, type WorldId } from "@/lib/worlds";
 
 export type EntryPath = "founder" | "invite" | "consumer" | null;
+export type EmailGate = "origins" | "enter" | null;
 export type CeremonyStep = "summary" | "id" | "keys" | "hub" | null;
 
 export type MembershipChoice = {
@@ -46,6 +47,7 @@ export type GateSession = {
   phoneVerified: boolean;
   phoneMask: string | null;
   keysToTheCity: boolean;
+  emailGate: EmailGate;
 };
 
 const KEY = "philia_gate";
@@ -84,6 +86,7 @@ const empty: GateSession = {
   phoneVerified: false,
   phoneMask: null,
   keysToTheCity: false,
+  emailGate: null,
 };
 
 function canUseStorage() {
@@ -155,10 +158,32 @@ export function hasFounderKey() {
   return !!s.founderToken && s.keyId != null;
 }
 
+export function isConsumerSession() {
+  return readSession().entryPath === "consumer";
+}
+
+export function isFounderSession() {
+  const s = readSession();
+  return s.entryPath === "founder" || s.keysToTheCity === true;
+}
+
+export function hasConsumerKey() {
+  const s = readSession();
+  return s.entryPath === "consumer" && s.keyId != null;
+}
+
 export function normalizeCeremonyStep(raw: unknown): CeremonyStep {
   const s = String(raw || "").toLowerCase();
   if (s === "summary" || s === "id" || s === "keys" || s === "hub") return s;
   return null;
+}
+
+function entryPathFromMe(raw: string | null | undefined): EntryPath | undefined {
+  const v = String(raw || "").toLowerCase();
+  if (v === "founder") return "founder";
+  if (v === "invite") return "invite";
+  if (v === "consumer" || v === "system") return "consumer";
+  return undefined;
 }
 
 export function applyMeToSession(me: {
@@ -174,6 +199,7 @@ export function applyMeToSession(me: {
   user_id?: number | null;
   has_claimed_key?: boolean | null;
   keys_to_the_city?: boolean;
+  entry_path?: string | null;
   verified_email?: string | null;
   verified_mobile?: string | null;
   needs_onboarding?: boolean;
@@ -204,6 +230,7 @@ export function applyMeToSession(me: {
     claimDeadline: me.claim_deadline ?? readSession().claimDeadline,
     userId: me.user_id ?? readSession().userId,
     keysToTheCity: me.keys_to_the_city ?? readSession().keysToTheCity,
+    entryPath: entryPathFromMe(me.entry_path) ?? readSession().entryPath,
     membershipChoice: me.membership_choice ?? readSession().membershipChoice,
     worldsFilled: me.worlds
       ? worldsFilledCount(me.worlds as Record<WorldId, string[]>)

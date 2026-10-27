@@ -1,7 +1,7 @@
 "use client";
 
 import type { Me } from "@/lib/api/member";
-import { applyMeToSession, normalizeCeremonyStep, readSession } from "@/lib/session";
+import { applyMeToSession, isConsumerSession, normalizeCeremonyStep, readSession } from "@/lib/session";
 import { ceremonyUrlForStep, persistCeremonyStep } from "@/lib/ceremony";
 import { computeResume, hydrateAnswersFromServer, resumeUrl } from "@/lib/story-answers";
 import { isFilled, type StoryAnswers } from "@/lib/story-data";
@@ -38,6 +38,13 @@ export async function resumeMember(me: Me) {
   if (me.has_claimed_key === false) {
     if (isInviteSession() && readSession().keyId != null) {
       window.location.replace(inviteContinueHref());
+      return;
+    }
+    const path = String(me.entry_path || "").toLowerCase();
+    const consumer = isConsumerSession() || path === "consumer" || path === "system";
+    if (consumer) {
+      const s = readSession();
+      window.location.replace(s.keyId != null || s.founderToken ? routes.verify : routes.enter);
       return;
     }
     window.location.replace(routes.unlock);

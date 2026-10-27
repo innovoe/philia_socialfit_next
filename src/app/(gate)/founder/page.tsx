@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { videos } from "@/lib/assets";
-import { hasFounderToken, readSession } from "@/lib/session";
+import { hasFounderToken, isConsumerSession, readSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 
 export default function FounderPage() {
@@ -13,6 +13,10 @@ export default function FounderPage() {
     const s = readSession();
     if (!hasFounderToken() || !s.keyId) {
       window.location.replace(routes.origins);
+      return;
+    }
+    if (isConsumerSession()) {
+      window.location.replace(routes.demo);
     }
   }, [router]);
 

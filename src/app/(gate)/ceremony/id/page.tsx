@@ -27,6 +27,7 @@ import {
 import { isSessionExpiring, requireMemberAccess } from "@/lib/expire";
 import { patchMeError } from "@/lib/identity";
 import { applyMeToSession, normalizeCeremonyStep, readSession, writeSession } from "@/lib/session";
+import { hydrateAnswersFromServer } from "@/lib/story-answers";
 import { routes } from "@/lib/routes";
 
 export default function CeremonyIdPage() {
@@ -86,6 +87,12 @@ export default function CeremonyIdPage() {
         setSocialArch(formatMirrorArchetypes(mirror) || "Pending");
       } catch {
         /* keep Pending */
+      }
+
+      try {
+        await hydrateAnswersFromServer();
+      } catch {
+        /* keep local story answers */
       }
 
       try {

@@ -27,6 +27,7 @@ import {
 import { memberInitials, visibleCardName } from "@/lib/profile";
 import { patchMeError } from "@/lib/identity";
 import { applyMeToSession } from "@/lib/session";
+import { hydrateAnswersFromServer } from "@/lib/story-answers";
 import { routes } from "@/lib/routes";
 
 const LOC_BTNS: { id: LocationPrecision; label: string }[] = [
@@ -89,6 +90,11 @@ export function IdManageScreen() {
         /* keep Pending */
       }
       if (isSessionExpiring()) return;
+      try {
+        await hydrateAnswersFromServer();
+      } catch {
+        /* keep local story answers */
+      }
       try {
         const passport = await getPassport();
         applyPassportToSession(passport, identity || undefined);

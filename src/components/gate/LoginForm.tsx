@@ -136,7 +136,6 @@ export function LoginForm() {
         userId: tokens.user_id ?? null,
         founderEmail: nextEmail,
         email: nextEmail,
-        entryPath: readSession().entryPath || "founder",
       });
       const me = await getMe(tokens.access);
       await resumeMember(me);
