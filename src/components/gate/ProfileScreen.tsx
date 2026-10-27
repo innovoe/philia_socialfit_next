@@ -19,7 +19,12 @@ import { patchMeError } from "@/lib/identity";
 import { startSignalReplay } from "@/lib/signal-demo";
 import { isSessionExpiring } from "@/lib/expire";
 import { applyMeToSession, readSession } from "@/lib/session";
-import { emptyWorlds } from "@/lib/worlds";
+import {
+  emptyWorlds,
+  resolveWorldInput,
+  WORLD_GROUP_MAX,
+  WORLD_LABEL_MAX,
+} from "@/lib/worlds";
 import { routes } from "@/lib/routes";
 
 function LinkRow({
@@ -111,6 +116,7 @@ export function ProfileScreen() {
   const [avatar, setAvatar] = useState<string | null>(null);
   const [worlds, setWorlds] = useState(emptyWorlds);
   const [openGrp, setOpenGrp] = useState<WorldId | null>(null);
+  const [worldDraft, setWorldDraft] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState("");
   const [note, setNote] = useState("");
@@ -185,20 +191,14 @@ export function ProfileScreen() {
     }
   }
 
-  async function toggleChip(grp: WorldId, label: string) {
+  async function saveWorlds(next: Record<WorldId, string[]>) {
     const prev = worlds;
-    const next = {
-      ...worlds,
-      [grp]: worlds[grp].includes(label)
-        ? worlds[grp].filter((c) => c !== label)
-        : [...worlds[grp], label],
-    };
     setWorlds(next);
     setBusy("worlds");
     setErr("");
     setNote("");
     try {
-      applyIdentity(await patchMe({ worlds: next }));
+      applyIdentity(await patchMe({ worlds: { ...emptyWorlds(), ...next } }));
       setNote("Saved");
       window.setTimeout(() => setNote(""), 1600);
     } catch (e) {
@@ -207,6 +207,38 @@ export function ProfileScreen() {
     } finally {
       setBusy(null);
     }
+  }
+
+  async function toggleChip(grp: WorldId, label: string) {
+    const key = label.toLowerCase();
+    const has = worlds[grp].some((c) => c.toLowerCase() === key);
+    const nextGroup = has
+      ? worlds[grp].filter((c) => c.toLowerCase() !== key)
+      : [...worlds[grp], label];
+    if (!has && nextGroup.length > WORLD_GROUP_MAX) {
+      setErr("Keep each world to 20 items.");
+      return;
+    }
+    await saveWorlds({ ...emptyWorlds(), ...worlds, [grp]: nextGroup });
+  }
+
+  async function addWorld(grp: WorldId) {
+    const resolved = resolveWorldInput(grp, worldDraft);
+    if (resolved.error || !resolved.label) {
+      setErr(resolved.error || "Type a world to add.");
+      return;
+    }
+    const key = resolved.label.toLowerCase();
+    if (worlds[grp].some((c) => c.toLowerCase() === key)) {
+      setWorldDraft("");
+      return;
+    }
+    if (worlds[grp].length >= WORLD_GROUP_MAX) {
+      setErr("Keep each world to 20 items.");
+      return;
+    }
+    setWorldDraft("");
+    await saveWorlds({ ...emptyWorlds(), ...worlds, [grp]: [...worlds[grp], resolved.label] });
   }
 
   async function onRequestKeys() {
@@ -564,7 +596,10 @@ export function ProfileScreen() {
               >
                 <button
                   type="button"
-                  onClick={() => setOpenGrp(open ? null : grp.id)}
+                  onClick={() => {
+                    setOpenGrp(open ? null : grp.id);
+                    setWorldDraft("");
+                  }}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -621,13 +656,56 @@ export function ProfileScreen() {
                       key={chip}
                       type="button"
                       className="pchip"
-                      data-on={selected.includes(chip) ? "1" : "0"}
+                      data-on={selected.some((c) => c.toLowerCase() === chip.toLowerCase()) ? "1" : "0"}
                       disabled={busy === "worlds"}
-                      onClick={() => toggleChip(grp.id, chip)}
+                      onClick={() => void toggleChip(grp.id, chip)}
                     >
                       {chip}
                     </button>
                   ))}
+                  {selected
+                    .filter((item) => !grp.chips.some((chip) => chip.toLowerCase() === item.toLowerCase()))
+                    .map((item) => (
+                      <button
+                        key={item}
+                        type="button"
+                        className="pchip"
+                        data-on="1"
+                        disabled={busy === "worlds"}
+                        onClick={() => void toggleChip(grp.id, item)}
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      void addWorld(grp.id);
+                    }}
+                    style={{ display: "flex", gap: 8, width: "100%", marginTop: 6 }}
+                  >
+                    <input
+                      className="verify-input"
+                      type="text"
+                      maxLength={WORLD_LABEL_MAX}
+                      placeholder="Type in your own"
+                      value={open ? worldDraft : ""}
+                      disabled={busy === "worlds" || selected.length >= WORLD_GROUP_MAX}
+                      onChange={(e) => {
+                        setWorldDraft(e.target.value);
+                        setErr("");
+                      }}
+                      style={{ flex: 1, height: 40, fontSize: 13 }}
+                    />
+                    <button
+                      type="submit"
+                      className="pchip"
+                      disabled={busy === "worlds" || selected.length >= WORLD_GROUP_MAX || !worldDraft.trim()}
+                      style={{ borderRadius: 12 }}
+                    >
+                      Add
+                    </button>
+                  </form>
                 </div>
               </div>
             );
