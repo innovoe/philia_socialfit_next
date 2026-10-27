@@ -3,7 +3,10 @@ import dictionary from "dictionary-en";
 
 export const runtime = "nodejs";
 
-const spell = nspell(dictionary);
+const spell = nspell({
+  aff: Buffer.from(dictionary.aff),
+  dic: Buffer.from(dictionary.dic),
+});
 
 function prettySuggestion(word: string) {
   if (/[A-Z]/.test(word.slice(1))) return word;
