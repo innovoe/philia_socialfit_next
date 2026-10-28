@@ -24,6 +24,21 @@ function errorCode(err: unknown) {
   return "";
 }
 
+function alreadyClaimed(err: unknown) {
+  const code = errorCode(err).toLowerCase().replace(/[\s-]+/g, "_");
+  const detail = isApiError(err) ? err.detail.toLowerCase() : "";
+  return (
+    code === "already_claimed" ||
+    code === "key_already_claimed" ||
+    code === "claimed" ||
+    code === "cannot_claim_again" ||
+    code === "cant_claim_again" ||
+    code.includes("already_claimed") ||
+    detail.includes("already claimed") ||
+    detail.includes("claim again")
+  );
+}
+
 export function InvitePrimer() {
   const [ready, setReady] = useState(false);
   const [from, setFrom] = useState("A friend");
@@ -59,6 +74,14 @@ export function InvitePrimer() {
     return () => window.clearInterval(id);
   }, [ready]);
 
+  async function continueToStory(me: Awaited<ReturnType<typeof getMe>> | null) {
+    if (me && me.needs_onboarding === false) {
+      await resumeMember(me);
+      return;
+    }
+    window.location.assign(routes.verified);
+  }
+
   async function onStart() {
     setError("");
     setErrorCodeName("");
@@ -67,26 +90,29 @@ export function InvitePrimer() {
       return;
     }
     setBusy(true);
+    const access = readSession().access || "";
     try {
-      const { me } = await claimInviteKey(readSession().access || "");
-      if (me && me.needs_onboarding === false) {
-        await resumeMember(me);
+      const me = await getMe(access);
+      if (me.has_claimed_key) {
+        await continueToStory(me);
         return;
       }
-      window.location.assign(routes.verified);
+    } catch {
+      /* still try claim */
+    }
+    try {
+      const { me } = await claimInviteKey(access);
+      await continueToStory(me);
     } catch (err) {
       const code = errorCode(err);
-      if (code === "already_member") {
+      if (code === "already_member" || alreadyClaimed(err)) {
         try {
           const me = await getMe();
-          await resumeMember(me);
+          await continueToStory(me);
         } catch {
-          window.location.replace(routes.login);
+          if (code === "already_member") window.location.replace(routes.login);
+          else window.location.assign(routes.verified);
         }
-        return;
-      }
-      if (code === "already_claimed" || code === "key_already_claimed" || code === "claimed") {
-        window.location.assign(routes.verified);
         return;
       }
       setErrorCodeName(code);
@@ -362,7 +388,7 @@ export function InvitePrimer() {
             disabled={busy}
             aria-busy={busy}
           >
-            <span>{busy ? "Claiming…" : "Start SocialFit"}</span>
+            <span>{busy ? "Starting story…" : "Start SocialFit"}</span>
             <CtaEnd busy={busy} />
           </button>
           {errorCodeName === "own_key" || errorCodeName === "claim_failed" ? (
