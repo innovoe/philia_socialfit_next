@@ -13,7 +13,7 @@ import {
   isInviteSession,
   sentenceStartName,
 } from "@/lib/invite";
-import { hasAccess, readSession } from "@/lib/session";
+import { applyMeToSession, hasAccess, readSession } from "@/lib/session";
 import { resumeMember } from "@/lib/resume";
 import { routes } from "@/lib/routes";
 import { CtaEnd } from "@/components/gate/CtaEnd";
@@ -61,13 +61,21 @@ export function InvitePrimer() {
     }
     setFrom(inviteOwnerName());
     setReady(true);
+    if (!hasAccess()) return;
+    void getMe()
+      .then((me) => {
+        applyMeToSession(me);
+      })
+      .catch(() => {
+        /* keep stashed deadlines */
+      });
   }, []);
 
   useEffect(() => {
     if (!ready) return;
     function tick() {
       const s = readSession();
-      setClock(formatClaimClock(s.finishDeadline || s.claimDeadline));
+      setClock(formatClaimClock(s.finishDeadline));
     }
     tick();
     const id = window.setInterval(tick, 1000);
