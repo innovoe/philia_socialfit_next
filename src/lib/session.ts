@@ -178,6 +178,16 @@ export function normalizeCeremonyStep(raw: unknown): CeremonyStep {
   return null;
 }
 
+export function isExplorerStep(step: CeremonyStep | null | undefined) {
+  return step === "id" || step === "keys" || step === "hub";
+}
+
+/** Story + Read are done and the member has reached ceremony (or beyond). */
+export function hasFinishedStory() {
+  const s = readSession();
+  return !!(s.explorerReady || s.ceremonyStep === "summary" || isExplorerStep(s.ceremonyStep));
+}
+
 function entryPathFromMe(raw: string | null | undefined): EntryPath | undefined {
   const v = String(raw || "").toLowerCase();
   if (v === "founder") return "founder";
@@ -207,13 +217,14 @@ export function applyMeToSession(me: {
   worlds?: Record<string, string[]>;
 } | null | undefined) {
   if (!me) return readSession();
+  const prev = readSession();
   const step = normalizeCeremonyStep(me.ceremony_step);
-  const explorer =
-    step === "id" || step === "keys" || step === "hub" || readSession().explorerReady;
+  const keepAdvanced = step === "summary" && isExplorerStep(prev.ceremonyStep);
+  const explorer = isExplorerStep(step) || prev.explorerReady;
   return writeSession({
-    ceremonyStep: step || readSession().ceremonyStep,
+    ceremonyStep: keepAdvanced ? prev.ceremonyStep : step || prev.ceremonyStep,
     explorerReady: explorer,
-    hubUnlocked: step === "hub" || readSession().hubUnlocked,
+    hubUnlocked: step === "hub" || prev.hubUnlocked,
     displayName: me.display_name != null ? me.display_name || null : readSession().displayName,
     firstName: me.first_name != null ? me.first_name || null : readSession().firstName,
     lastName: me.last_name != null ? me.last_name || null : readSession().lastName,

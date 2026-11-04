@@ -14,7 +14,7 @@ const PC_ORDER = ["explorer", "insider", "catalyst"] as const;
 const PC_STATES = ["is-front", "is-mid", "is-back"] as const;
 const PC_DESCS: Record<(typeof PC_ORDER)[number], string> = {
   explorer: "Your first read, your self-perception layer, and your entry into SocialFit. No payment needed.",
-  insider: "Activate your Philia ID, send Signals, and step into SocialFit properly. Month 1 complimentary if 3 Keys are claimed at launch.",
+  insider: "Activate your Philia ID, send Signals, and step into SocialFit properly.",
   catalyst: "For a more intentional, more active social life. Priority routing, advanced filters, full SocialFit dashboard.",
 };
 
@@ -337,7 +337,6 @@ export function HubPricing({
                   <div className="pc-ctx-row"><Icon d={I.route} /><span>Priority routing</span></div>
                   <div className="pc-ctx-row"><Icon d={I.bars} /><span>Full SocialFit dashboard</span></div>
                 </div>
-                <span className="pc-badge">✓ &nbsp;Month 1 complimentary if 3 Keys claimed</span>
                 <button
                   className={`pc-choose-btn${busyTier === "insider" ? " is-busy" : ""}`}
                   type="button"

@@ -14,7 +14,7 @@ import { isSessionExpiring, requireMemberAccess } from "@/lib/expire";
 import { applyMeToSession, normalizeCeremonyStep, writeSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { firstIncomplete, leadCap, STORY_SECTIONS, type StoryAnswers } from "@/lib/story-data";
-import { hydrateAnswersFromServer } from "@/lib/story-answers";
+import { hydrateAnswersFromServer, loadAnswers } from "@/lib/story-answers";
 import { CtaEnd } from "@/components/gate/CtaEnd";
 
 export default function CeremonySummaryPage() {
@@ -24,6 +24,9 @@ export default function CeremonySummaryPage() {
 
   useEffect(() => {
     if (!requireMemberAccess()) return;
+    if (firstIncomplete(STORY_SECTIONS, loadAnswers(), 3) == null) {
+      persistCeremonyStep("summary");
+    }
     hydrateAnswersFromServer()
       .then(async (next) => {
         if (isSessionExpiring()) return;
@@ -32,6 +35,7 @@ export default function CeremonySummaryPage() {
           window.location.replace(`${routes.story}/${late + 1}`);
           return;
         }
+        persistCeremonyStep("summary");
         try {
           const me = await getMe();
           applyMeToSession(me);

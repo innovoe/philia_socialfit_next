@@ -14,6 +14,7 @@ export const routes = {
   verify: "/verify",
   verified: "/verified",
   story: "/story",
+  storyPreamble: "/story/preamble",
   read: "/read",
   ceremony: "/ceremony",
   ceremonyId: "/ceremony/id",

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { computeResume, loadAnswers, resumeUrl } from "@/lib/story-answers";
-import { readSession } from "@/lib/session";
+import { isExplorerStep, readSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { goHub } from "@/lib/hub";
 import { WORLDS_EVENT, worldsBadgeDone } from "@/lib/profile";
@@ -66,6 +66,22 @@ function buildStep(path: string) {
   return null;
 }
 
+function navFlags(
+  path: string,
+  explorerReady: boolean,
+  hubUnlocked: boolean,
+) {
+  const s = readSession();
+  const live = explorerReady || s.explorerReady || isExplorerStep(s.ceremonyStep);
+  const revisitingStory =
+    path.startsWith(routes.story) || path.startsWith(routes.read);
+  return {
+    live,
+    ready: live || (revisitingStory && s.ceremonyStep === "summary"),
+    hub: hubUnlocked || s.hubUnlocked || s.ceremonyStep === "hub",
+  };
+}
+
 function slotClass(
   slot: 1 | 2 | 3 | 4 | 5,
   askOpen: boolean,
@@ -97,8 +113,9 @@ export function FlexNav({
   const [toast, setToast] = useState("");
   const [toastIn, setToastIn] = useState(false);
   const [timer, setTimer] = useState("");
-  const [ready, setReady] = useState(explorerReady);
-  const [hub, setHub] = useState(hubUnlocked);
+  const [ready, setReady] = useState(() => navFlags(path, explorerReady, hubUnlocked).ready);
+  const [explorer, setExplorer] = useState(() => navFlags(path, explorerReady, hubUnlocked).live);
+  const [hub, setHub] = useState(() => navFlags(path, explorerReady, hubUnlocked).hub);
   const [worldsDone, setWorldsDone] = useState(false);
   const closeT = useRef<number | null>(null);
   const toastT = useRef<number | null>(null);
@@ -136,9 +153,10 @@ export function FlexNav({
       const s = readSession();
       const left = remainingSeconds(s.finishDeadline || s.claimDeadline);
       setTimer(left > 0 ? formatBuildTimer(left) : "");
-      const live = explorerReady || s.explorerReady || s.ceremonyStep === "id" || s.ceremonyStep === "keys" || s.ceremonyStep === "hub";
-      setReady(live);
-      setHub(hubUnlocked || s.hubUnlocked || s.ceremonyStep === "hub");
+      const flags = navFlags(path, explorerReady, hubUnlocked);
+      setExplorer(flags.live);
+      setReady(flags.ready);
+      setHub(flags.hub);
       setWorldsDone(worldsBadgeDone());
     }
     tick();
@@ -210,7 +228,8 @@ export function FlexNav({
       return;
     }
     if (n === 1) {
-      if (path !== routes.id) window.location.assign(routes.id);
+      const dest = explorer ? routes.id : routes.ceremony;
+      if (path !== dest) window.location.assign(dest);
       return;
     }
     if (n === 2) {
@@ -218,7 +237,8 @@ export function FlexNav({
       return;
     }
     if (n === 3) {
-      if (path !== routes.profile) window.location.assign(routes.profile);
+      const dest = explorer ? routes.profile : routes.ceremony;
+      if (path !== dest) window.location.assign(dest);
       return;
     }
     if (n === 4) {

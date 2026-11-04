@@ -127,7 +127,7 @@ export default function VerifiedPage() {
           <button
             className="verified-cta"
             type="button"
-            onClick={() => window.location.assign(routes.story)}
+            onClick={() => window.location.assign(routes.storyPreamble)}
           >
             <span>Begin SocialFit Story</span>
             <span>→</span>

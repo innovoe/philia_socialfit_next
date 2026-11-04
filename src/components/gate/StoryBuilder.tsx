@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { videos } from "@/lib/assets";
+import { persistCeremonyStep } from "@/lib/ceremony";
 import { isSessionExpiring, requireMemberAccess } from "@/lib/expire";
+import { hasFinishedStory } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import {
   READ_SECTIONS,
@@ -233,7 +235,9 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
           ? "Review →"
           : "Continue →";
 
-  const backOn = mode === "read" ? true : index > 0 || index === 3;
+  const storyDone = hasFinishedStory();
+  const backOn =
+    mode === "read" ? true : index > 0 || index === 3 || (index === 0 && !storyDone);
 
   function savePick(key: string, value: StoryAnswer, extra?: { partnershipNote?: string }) {
     const next = { ...loadAnswers(), [key]: value };
@@ -290,7 +294,11 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
       router.push(`${routes.read}/4`);
       return;
     }
-    if (index > 0) router.push(`${routes.story}/${index}`);
+    if (index > 0) {
+      router.push(`${routes.story}/${index}`);
+      return;
+    }
+    if (!storyDone) router.push(routes.storyPreamble);
   }
 
   function onReviewContinue() {
@@ -309,6 +317,7 @@ export function StoryBuilder({ mode, index }: { mode: "story" | "read"; index: n
     }
     setLeaving(true);
     persistAnswers(answers);
+    persistCeremonyStep("summary");
     window.location.assign(routes.ceremony);
   }
 
@@ -473,6 +482,10 @@ export function StoryResume({ mode }: { mode: "story" | "read" }) {
     const answers = loadAnswers();
     const target = computeResume(answers);
     if (mode === "story" && target.kind === "story") {
+      if (target.index === 0 && !Object.keys(answers).some((k) => isFilled(answers[k]))) {
+        router.replace(routes.storyPreamble);
+        return;
+      }
       router.replace(`${routes.story}/${target.index + 1}`);
       return;
     }

@@ -3,6 +3,7 @@
 import { isApiError } from "@/lib/api/errors";
 import {
   applyMeToSession,
+  isExplorerStep,
   readSession,
   writeSession,
   type CeremonyStep,
@@ -83,15 +84,19 @@ export function persistIdTheme(theme: PassportTheme) {
 
 export function persistCeremonyStep(step: CeremonyStep) {
   if (!step) return;
+  const prev = readSession();
+  const keepAdvanced = step === "summary" && isExplorerStep(prev.ceremonyStep);
+  const nextStep = keepAdvanced ? prev.ceremonyStep : step;
+  if (!nextStep) return;
   try {
-    localStorage.setItem(STEP_KEY, step);
+    localStorage.setItem(STEP_KEY, nextStep);
   } catch {
     /* private mode */
   }
   writeSession({
-    ceremonyStep: step,
-    explorerReady: step === "id" || step === "keys" || step === "hub",
-    hubUnlocked: step === "hub",
+    ceremonyStep: nextStep,
+    explorerReady: isExplorerStep(step) || prev.explorerReady,
+    hubUnlocked: step === "hub" || prev.hubUnlocked,
   });
 }
 
