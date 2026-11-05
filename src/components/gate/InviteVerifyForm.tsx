@@ -6,7 +6,7 @@ import { isValidEmail } from "@/lib/api/origins";
 import { mapOtpError, readOtpSend, sendOtp, verifyOtp } from "@/lib/api/otp";
 import { normalizeUaePhone, sanitizeUaeLocalInput } from "@/lib/api/phone";
 import { readApiRefusal, refusalGoesToLogin, refusalLine } from "@/lib/api/errors";
-import { inviteContinueHref, isInviteSession } from "@/lib/invite";
+import { ensureFinishDeadline, inviteContinueHref, isInviteSession } from "@/lib/invite";
 import { hasAccess, readSession, writeSession } from "@/lib/session";
 import { clearStoryProgress } from "@/lib/story-answers";
 import { routes } from "@/lib/routes";
@@ -129,6 +129,7 @@ export function InviteVerifyForm() {
         founderEmail: nextEmail,
         entryPath: "invite",
       });
+      ensureFinishDeadline();
       window.location.assign(inviteContinueHref());
     } catch (err) {
       showOtpRefusal(err, true);

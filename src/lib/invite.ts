@@ -219,10 +219,32 @@ export async function claimInviteKey(access: string): Promise<{ claim: ClaimKeyR
   return { claim, me };
 }
 
-export function formatClaimClock(iso: string | null | undefined) {
-  if (!iso) return "—";
+const STORY_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+function validDeadline(iso: string | null | undefined) {
+  if (!iso) return null;
   const end = Date.parse(iso);
-  if (!Number.isFinite(end)) return "—";
+  return Number.isFinite(end) ? iso : null;
+}
+
+/** Story completion is 24h from OTP. Prefer BE `finish_deadline`; stamp locally if missing. */
+export function ensureFinishDeadline(fromBe?: string | null) {
+  const be = validDeadline(fromBe);
+  if (be) {
+    if (be !== readSession().finishDeadline) writeSession({ finishDeadline: be });
+    return be;
+  }
+  const existing = validDeadline(readSession().finishDeadline);
+  if (existing) return existing;
+  const next = new Date(Date.now() + STORY_WINDOW_MS).toISOString();
+  writeSession({ finishDeadline: next });
+  return next;
+}
+
+export function formatClaimClock(iso: string | null | undefined) {
+  const deadline = validDeadline(iso);
+  if (!deadline) return "—";
+  const end = Date.parse(deadline);
   const diff = Math.max(0, end - Date.now());
   const h = Math.floor(diff / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);

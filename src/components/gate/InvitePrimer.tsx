@@ -8,6 +8,7 @@ import { mapOtpError } from "@/lib/api/otp";
 import { goLogout } from "@/lib/hub";
 import {
   claimInviteKey,
+  ensureFinishDeadline,
   formatClaimClock,
   inviteOwnerName,
   isInviteSession,
@@ -61,21 +62,24 @@ export function InvitePrimer() {
     }
     setFrom(inviteOwnerName());
     setReady(true);
-    if (!hasAccess()) return;
+    if (!hasAccess()) {
+      ensureFinishDeadline();
+      return;
+    }
     void getMe()
       .then((me) => {
         applyMeToSession(me);
+        ensureFinishDeadline(me.finish_deadline);
       })
       .catch(() => {
-        /* keep stashed deadlines */
+        ensureFinishDeadline();
       });
   }, []);
 
   useEffect(() => {
     if (!ready) return;
     function tick() {
-      const s = readSession();
-      setClock(formatClaimClock(s.finishDeadline));
+      setClock(formatClaimClock(ensureFinishDeadline()));
     }
     tick();
     const id = window.setInterval(tick, 1000);
