@@ -51,6 +51,12 @@ export type GateSession = {
 };
 
 const KEY = "philia_gate";
+export const SESSION_EVENT = "philia-gate";
+
+function emitSession() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event(SESSION_EVENT));
+}
 
 const empty: GateSession = {
   entryPath: null,
@@ -114,6 +120,7 @@ export function writeSession(patch: Partial<GateSession>): GateSession {
   } catch {
     /* private mode */
   }
+  emitSession();
   return next;
 }
 
@@ -125,6 +132,7 @@ export function clearSession() {
   } catch {
     /* ignore */
   }
+  emitSession();
 }
 
 export function hasFounderToken() {

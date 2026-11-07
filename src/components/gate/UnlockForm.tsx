@@ -338,7 +338,7 @@ export function UnlockForm() {
         ) : (
           <>
             <p className="gate-copy">
-              You have been gifted a Founder Key.
+              You have been gifted a Key.
               <br />
               Enter your code to begin.
             </p>

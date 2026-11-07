@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { computeResume, loadAnswers, resumeUrl } from "@/lib/story-answers";
-import { isExplorerStep, readSession } from "@/lib/session";
+import { cachedMe, isHubMe } from "@/lib/me-cache";
+import { isExplorerStep, readSession, SESSION_EVENT } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { goHub } from "@/lib/hub";
 import { WORLDS_EVENT, worldsBadgeDone } from "@/lib/profile";
@@ -72,13 +73,14 @@ function navFlags(
   hubUnlocked: boolean,
 ) {
   const s = readSession();
-  const live = explorerReady || s.explorerReady || isExplorerStep(s.ceremonyStep);
+  const hub = hubUnlocked || s.hubUnlocked || s.ceremonyStep === "hub" || isHubMe(cachedMe());
+  const live = explorerReady || s.explorerReady || isExplorerStep(s.ceremonyStep) || hub;
   const revisitingStory =
     path.startsWith(routes.story) || path.startsWith(routes.read);
   return {
     live,
     ready: live || (revisitingStory && s.ceremonyStep === "summary"),
-    hub: hubUnlocked || s.hubUnlocked || s.ceremonyStep === "hub",
+    hub,
   };
 }
 
@@ -148,21 +150,29 @@ export function FlexNav({
     if (askOpen) setOpen(true);
   }, [askOpen]);
 
+  useLayoutEffect(() => {
+    function sync() {
+      const flags = navFlags(path, explorerReady, hubUnlocked);
+      setExplorer(flags.live);
+      setReady(flags.ready);
+      setHub(flags.hub);
+    }
+    sync();
+    window.addEventListener(SESSION_EVENT, sync);
+    return () => window.removeEventListener(SESSION_EVENT, sync);
+  }, [explorerReady, hubUnlocked, path]);
+
   useEffect(() => {
     function tick() {
       const s = readSession();
       const left = remainingSeconds(s.finishDeadline || s.claimDeadline);
       setTimer(left > 0 ? formatBuildTimer(left) : "");
-      const flags = navFlags(path, explorerReady, hubUnlocked);
-      setExplorer(flags.live);
-      setReady(flags.ready);
-      setHub(flags.hub);
       setWorldsDone(worldsBadgeDone());
     }
     tick();
     const id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);
-  }, [explorerReady, hubUnlocked, path]);
+  }, [path]);
 
   useEffect(() => {
     function syncBadge() {
