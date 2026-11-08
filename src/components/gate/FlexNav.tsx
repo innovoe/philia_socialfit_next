@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { computeResume, loadAnswers, resumeUrl } from "@/lib/story-answers";
-import { cachedMe, ensureMe, isHubMe } from "@/lib/me-cache";
-import { isExplorerStep, readSession, SESSION_EVENT } from "@/lib/session";
+import { readSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { goHub } from "@/lib/hub";
 import { WORLDS_EVENT, worldsBadgeDone } from "@/lib/profile";
@@ -13,6 +12,7 @@ type FlexNavProps = {
   askOpen: boolean;
   explorerReady?: boolean;
   hubUnlocked?: boolean;
+  storyReady?: boolean;
   onAskOpen: () => void;
   onAskClose: () => void;
 };
@@ -67,23 +67,6 @@ function buildStep(path: string) {
   return null;
 }
 
-function navFlags(
-  path: string,
-  explorerReady: boolean,
-  hubUnlocked: boolean,
-) {
-  const s = readSession();
-  const hub = hubUnlocked || s.hubUnlocked || s.ceremonyStep === "hub" || isHubMe(cachedMe());
-  const live = explorerReady || s.explorerReady || isExplorerStep(s.ceremonyStep) || hub;
-  const revisitingStory =
-    path.startsWith(routes.story) || path.startsWith(routes.read);
-  return {
-    live,
-    ready: live || (revisitingStory && s.ceremonyStep === "summary"),
-    hub,
-  };
-}
-
 function slotClass(
   slot: 1 | 2 | 3 | 4 | 5,
   askOpen: boolean,
@@ -105,6 +88,7 @@ export function FlexNav({
   askOpen,
   explorerReady = false,
   hubUnlocked = false,
+  storyReady = false,
   onAskOpen,
   onAskClose,
 }: FlexNavProps) {
@@ -115,9 +99,9 @@ export function FlexNav({
   const [toast, setToast] = useState("");
   const [toastIn, setToastIn] = useState(false);
   const [timer, setTimer] = useState("");
-  const [ready, setReady] = useState(() => navFlags(path, explorerReady, hubUnlocked).ready);
-  const [explorer, setExplorer] = useState(() => navFlags(path, explorerReady, hubUnlocked).live);
-  const [hub, setHub] = useState(() => navFlags(path, explorerReady, hubUnlocked).hub);
+  const ready = storyReady || explorerReady;
+  const explorer = explorerReady;
+  const hub = hubUnlocked;
   const [worldsDone, setWorldsDone] = useState(false);
   const closeT = useRef<number | null>(null);
   const toastT = useRef<number | null>(null);
@@ -149,24 +133,6 @@ export function FlexNav({
   useEffect(() => {
     if (askOpen) setOpen(true);
   }, [askOpen]);
-
-  useLayoutEffect(() => {
-    let live = true;
-    function sync() {
-      if (!live) return;
-      const flags = navFlags(path, explorerReady, hubUnlocked);
-      setExplorer(flags.live);
-      setReady(flags.ready);
-      setHub(flags.hub);
-    }
-    sync();
-    window.addEventListener(SESSION_EVENT, sync);
-    void ensureMe().then(sync);
-    return () => {
-      live = false;
-      window.removeEventListener(SESSION_EVENT, sync);
-    };
-  }, [explorerReady, hubUnlocked, path]);
 
   useEffect(() => {
     function tick() {
