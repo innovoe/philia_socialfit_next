@@ -21,6 +21,7 @@ export function isHubMe(me?: Me | null) {
 
 export async function ensureMe() {
   if (!hasAccess()) return cached;
+  if (isHubMe(cached)) return cached;
   if (inflight) return inflight;
   inflight = getMe()
     .then((me) => {

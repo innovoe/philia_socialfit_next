@@ -44,6 +44,13 @@ function hubFromSession() {
   return s.hubUnlocked || s.ceremonyStep === "hub" || isHubMe(cachedMe());
 }
 
+function navFromStore(path: string) {
+  return {
+    explorer: isExplorer(path),
+    hub: hubFromSession(),
+  };
+}
+
 export function GateExtras() {
   const path = usePathname();
   const [askOpen, setAskOpen] = useState(false);
@@ -52,8 +59,9 @@ export function GateExtras() {
 
   useLayoutEffect(() => {
     function sync() {
-      setExplorerReady(isExplorer(path));
-      setHubUnlocked(hubFromSession());
+      const next = navFromStore(path);
+      setExplorerReady(next.explorer);
+      setHubUnlocked(next.hub);
     }
     sync();
     window.addEventListener(SESSION_EVENT, sync);
@@ -62,8 +70,17 @@ export function GateExtras() {
 
   useEffect(() => {
     if (!hasAccess()) return;
-    void ensureMe();
-  }, []);
+    let cancelled = false;
+    void ensureMe().then((me) => {
+      if (cancelled) return;
+      const next = navFromStore(path);
+      setExplorerReady(next.explorer || isHubMe(me));
+      setHubUnlocked(next.hub || isHubMe(me));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [path]);
 
   if (!showOn(path)) return null;
 

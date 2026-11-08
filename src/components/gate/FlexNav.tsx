@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { computeResume, loadAnswers, resumeUrl } from "@/lib/story-answers";
-import { cachedMe, isHubMe } from "@/lib/me-cache";
+import { cachedMe, ensureMe, isHubMe } from "@/lib/me-cache";
 import { isExplorerStep, readSession, SESSION_EVENT } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { goHub } from "@/lib/hub";
@@ -151,7 +151,9 @@ export function FlexNav({
   }, [askOpen]);
 
   useLayoutEffect(() => {
+    let live = true;
     function sync() {
+      if (!live) return;
       const flags = navFlags(path, explorerReady, hubUnlocked);
       setExplorer(flags.live);
       setReady(flags.ready);
@@ -159,7 +161,11 @@ export function FlexNav({
     }
     sync();
     window.addEventListener(SESSION_EVENT, sync);
-    return () => window.removeEventListener(SESSION_EVENT, sync);
+    void ensureMe().then(sync);
+    return () => {
+      live = false;
+      window.removeEventListener(SESSION_EVENT, sync);
+    };
   }, [explorerReady, hubUnlocked, path]);
 
   useEffect(() => {

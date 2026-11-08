@@ -221,6 +221,7 @@ export function applyMeToSession(me: {
   verified_email?: string | null;
   verified_mobile?: string | null;
   needs_onboarding?: boolean;
+  onboarding_step?: string | null;
   membership_choice?: MembershipChoice | null;
   worlds?: Record<string, string[]>;
 } | null | undefined) {
@@ -228,11 +229,14 @@ export function applyMeToSession(me: {
   const prev = readSession();
   const step = normalizeCeremonyStep(me.ceremony_step);
   const keepAdvanced = step === "summary" && isExplorerStep(prev.ceremonyStep);
-  const explorer = isExplorerStep(step) || prev.explorerReady;
+  const onboardingDone =
+    String(me.onboarding_step || "").toLowerCase() === "done" && me.needs_onboarding === false;
+  const hub = step === "hub" || onboardingDone || prev.hubUnlocked;
+  const explorer = isExplorerStep(step) || hub || !!me.passport_display || prev.explorerReady;
   return writeSession({
-    ceremonyStep: keepAdvanced ? prev.ceremonyStep : step || prev.ceremonyStep,
+    ceremonyStep: keepAdvanced ? prev.ceremonyStep : step || (hub ? "hub" : prev.ceremonyStep),
     explorerReady: explorer,
-    hubUnlocked: step === "hub" || prev.hubUnlocked,
+    hubUnlocked: hub,
     displayName: me.display_name != null ? me.display_name || null : readSession().displayName,
     firstName: me.first_name != null ? me.first_name || null : readSession().firstName,
     lastName: me.last_name != null ? me.last_name || null : readSession().lastName,
