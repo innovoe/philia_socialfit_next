@@ -73,7 +73,10 @@ export default function CeremonyIdPage() {
           return;
         }
         if (step) persistCeremonyStep(step);
-        writeSession({ explorerReady: true, hubUnlocked: step === "hub" });
+        writeSession({
+          explorerReady: true,
+          hubUnlocked: step === "hub" || readSession().hubUnlocked,
+        });
       } catch {
         if (isSessionExpiring()) return;
         if (!readSession().explorerReady) {
@@ -141,7 +144,7 @@ export default function CeremonyIdPage() {
       setClaimed(true);
       setClaimLabel(`✓ ${THEME_LABELS[nextTheme]} CLAIMED · YOUR CARD`);
       persistCeremonyStep("keys");
-      writeSession({ explorerReady: true, hubUnlocked: false });
+      writeSession({ explorerReady: true, hubUnlocked: readSession().hubUnlocked });
       try {
         await patchCeremony("keys");
       } catch {

@@ -16,12 +16,15 @@ export default function CeremonyKeysPage() {
     if (!requireMemberAccess()) return;
 
     async function boot() {
-      writeSession({ explorerReady: true, hubUnlocked: false });
+      writeSession({ explorerReady: true, hubUnlocked: readSession().hubUnlocked });
       persistCeremonyStep("keys");
       try {
         const me = await getMe();
         applyMeToSession(me);
-        writeSession({ explorerReady: true, hubUnlocked: me.ceremony_step === "hub" });
+        writeSession({
+          explorerReady: true,
+          hubUnlocked: me.ceremony_step === "hub" || readSession().hubUnlocked,
+        });
         if (me.ceremony_step !== "keys" && me.ceremony_step !== "hub") {
           try {
             await patchCeremony("keys");

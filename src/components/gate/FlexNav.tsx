@@ -79,7 +79,7 @@ function slotClass(
     if (slot === 2) return askOpen ? "fn-live" : current === 2 ? "fn-on fn-cta" : "fn-cta";
     return askOpen ? "fn-on" : "fn-live";
   }
-  if (slot === 4 && !hubUnlocked) return "fn-locked";
+  if (slot === 4 && !hubUnlocked && current !== 4) return "fn-locked";
   if (askOpen) return slot === 5 ? "fn-on" : "fn-live";
   return current === slot ? "fn-on" : "fn-live";
 }
@@ -101,7 +101,12 @@ export function FlexNav({
   const [timer, setTimer] = useState("");
   const ready = storyReady || explorerReady;
   const explorer = explorerReady;
-  const hub = hubUnlocked;
+  const s = readSession();
+  const hub =
+    hubUnlocked ||
+    screenFromPath(path) === "hub" ||
+    s.hubUnlocked ||
+    s.ceremonyStep === "hub";
   const [worldsDone, setWorldsDone] = useState(false);
   const closeT = useRef<number | null>(null);
   const toastT = useRef<number | null>(null);

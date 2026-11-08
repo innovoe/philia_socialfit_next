@@ -11,7 +11,7 @@ import {
   persistCeremonyStep,
 } from "@/lib/ceremony";
 import { isSessionExpiring, requireMemberAccess } from "@/lib/expire";
-import { applyMeToSession, normalizeCeremonyStep, writeSession } from "@/lib/session";
+import { applyMeToSession, normalizeCeremonyStep, readSession, writeSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { firstIncomplete, leadCap, STORY_SECTIONS, type StoryAnswers } from "@/lib/story-data";
 import { hydrateAnswersFromServer, loadAnswers } from "@/lib/story-answers";
@@ -81,7 +81,7 @@ export default function CeremonySummaryPage() {
       });
       applyPassportToSession(r, existing);
       persistCeremonyStep(normalizeCeremonyStep(r.ceremony_step) || "id");
-      writeSession({ explorerReady: true, hubUnlocked: false });
+      writeSession({ explorerReady: true, hubUnlocked: readSession().hubUnlocked });
       window.location.assign(routes.ceremonyId);
     } catch (err) {
       const msg = handleActivateError(err);

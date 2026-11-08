@@ -62,7 +62,7 @@ export default function CeremonyMirrorPage() {
   async function enterKeys() {
     if (busy) return;
     setBusy(true);
-    writeSession({ explorerReady: true, hubUnlocked: false });
+    writeSession({ explorerReady: true, hubUnlocked: readSession().hubUnlocked });
     persistCeremonyStep("keys");
     try {
       await patchCeremony("keys");
