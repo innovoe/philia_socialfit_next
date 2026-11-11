@@ -312,7 +312,7 @@ export function SignalResults() {
             aria-busy={leaving}
           >
             <span>{leaving ? "One moment…" : "Continue with your Key"}</span>
-            <CtaEnd busy={leaving} />
+            {leaving ? <CtaEnd busy /> : <span className="cta-arrow-by-dot">→</span>}
             {leaving ? null : (
               <>
                 <span className="res-cta-dot" />

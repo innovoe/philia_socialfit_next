@@ -10,6 +10,7 @@ import { routes } from "@/lib/routes";
 import { GateChrome } from "@/components/gate/GateChrome";
 import { CtaEnd, ctaStateClass } from "@/components/gate/CtaEnd";
 import { SessionHold } from "@/components/gate/SessionHold";
+import { FounderPathPanel } from "@/components/gate/FounderPathPanel";
 
 export function OriginsEmailForm({ gate = "origins" }: { gate?: "origins" | "enter" }) {
   const router = useRouter();
@@ -142,6 +143,7 @@ export function OriginsEmailForm({ gate = "origins" }: { gate?: "origins" | "ent
           <CtaEnd busy={busy} />
         </button>
       </form>
+      {gate === "origins" ? <FounderPathPanel /> : null}
     </GateChrome>
   );
 }

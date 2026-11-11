@@ -130,7 +130,7 @@ export default function VerifiedPage() {
             onClick={() => window.location.assign(routes.storyPreamble)}
           >
             <span>Begin SocialFit Story</span>
-            <span>→</span>
+            <span className="cta-arrow-by-dot">→</span>
             <span className="verified-cta-dot" />
             <span className="verified-cta-ring one" />
             <span className="verified-cta-ring two" />

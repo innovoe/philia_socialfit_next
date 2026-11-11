@@ -101,12 +101,10 @@ export function FlexNav({
   const [timer, setTimer] = useState("");
   const ready = storyReady || explorerReady;
   const explorer = explorerReady;
-  const s = readSession();
-  const hub =
-    hubUnlocked ||
-    screenFromPath(path) === "hub" ||
-    s.hubUnlocked ||
-    s.ceremonyStep === "hub";
+  // No readSession() here: render must match the server HTML or React keeps the
+  // server's fn-locked class (hydration mismatch). Session hub flags arrive via
+  // hubUnlocked from GateExtras/readNavFlags after mount.
+  const hub = hubUnlocked || screenFromPath(path) === "hub";
   const [worldsDone, setWorldsDone] = useState(false);
   const closeT = useRef<number | null>(null);
   const toastT = useRef<number | null>(null);

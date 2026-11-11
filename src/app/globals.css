@@ -1885,6 +1885,13 @@ body {
   animation: dotIn 0.7s ease forwards 0.4s;
 }
 
+/* Arrow on CTAs that also draw the pulsing dot (right: 21px). Sit left of the dot, not on it. */
+.cta-arrow-by-dot {
+  position: relative;
+  z-index: 2;
+  margin-right: 22px;
+}
+
 .res-cta-ring {
   position: absolute;
   right: 15.5px;
