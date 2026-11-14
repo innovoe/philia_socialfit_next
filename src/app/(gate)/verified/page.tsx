@@ -9,6 +9,7 @@ import { isInviteSession } from "@/lib/invite";
 import { isConsumerSession } from "@/lib/session";
 import { routes } from "@/lib/routes";
 import { SessionHold } from "@/components/gate/SessionHold";
+import { CtaDotArrow } from "@/components/gate/CtaEnd";
 
 function formatWindow(iso: string | null) {
   if (!iso) return null;
@@ -130,7 +131,7 @@ export default function VerifiedPage() {
             onClick={() => window.location.assign(routes.storyPreamble)}
           >
             <span>Begin SocialFit Story</span>
-            <span className="cta-arrow-by-dot">→</span>
+            <CtaDotArrow />
             <span className="verified-cta-dot" />
             <span className="verified-cta-ring one" />
             <span className="verified-cta-ring two" />

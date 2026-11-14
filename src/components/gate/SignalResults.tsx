@@ -6,7 +6,7 @@ import { routes } from "@/lib/routes";
 import { completeSignalDemo } from "@/lib/api/signal-demo";
 import { canPlaySignalDemo, RESULT_PEOPLE, RESULT_ROOMS, TAB_DESC, takeSignalReturn } from "@/lib/signal-demo";
 import { destroyAnim, playTrustGraph, type PlayGate } from "@/lib/lottie";
-import { CtaEnd } from "@/components/gate/CtaEnd";
+import { CtaDotArrow, CtaEnd } from "@/components/gate/CtaEnd";
 
 const SLOT = [
   { y: 0, scale: 1, op: 1, z: 4 },
@@ -312,7 +312,7 @@ export function SignalResults() {
             aria-busy={leaving}
           >
             <span>{leaving ? "One moment…" : "Continue with your Key"}</span>
-            {leaving ? <CtaEnd busy /> : <span className="cta-arrow-by-dot">→</span>}
+            {leaving ? <CtaEnd busy /> : <CtaDotArrow />}
             {leaving ? null : (
               <>
                 <span className="res-cta-dot" />
