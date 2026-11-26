@@ -7,7 +7,7 @@ export const HUB_NEXT_HEAD = "Build your social wealth.";
 export const HUB_NEXT_STEPS = [
   {
     n: "01",
-    title: "Begin with 14 days of Insider access.",
+    title: "Begin with 3 days of Insider access.",
     body: "Complete your profile and experience SocialFit with Insider features unlocked. After your trial, subscribe or continue free as an Explorer. Your profile remains yours.",
   },
   {
